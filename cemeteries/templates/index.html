@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Кладбища</title>
+</head>
+<body>
+    <h1>Список кладбищ</h1>
+    <ul>
+        {% for cemetery in cemeteries %}
+            <li>{{ cemetery.name }} ({{ cemetery.location }})</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -11,9 +11,9 @@ urlpatterns = [
     path('mark-all-as-read/', views.MarkAllNotificationsAsReadView.as_view(), name='mark_all_as_read'),
     
     # Управление подписками на уведомления
-    path('subscriptions/', views.NotificationSubscriptionListView.as_view(), name='subscription_list'),
-    path('subscriptions/create/', views.NotificationSubscriptionCreateView.as_view(), name='subscription_create'),
-    path('subscriptions/<int:pk>/delete/', views.NotificationSubscriptionDeleteView.as_view(), name='subscription_delete'),
+    ##path('subscriptions/', views.NotificationSubscriptionListView.as_view(), name='subscription_list'),
+    #path('subscriptions/create/', views.NotificationSubscriptionCreateView.as_view(), name='subscription_create'),
+    #path('subscriptions/<int:pk>/delete/', views.NotificationSubscriptionDeleteView.as_view(), name='subscription_delete'),
     
     # Уведомления о модификациях объектов
     path('object-modifications/', views.ObjectModificationNotificationsView.as_view(), name='object_modifications'),

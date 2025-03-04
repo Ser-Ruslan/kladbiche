@@ -1,17 +1,14 @@
-# models/__init__.py
-from .users import User
-from .cemeteries import Cemetery, CemeteryObject, Coordinates, Photo
-from .notifications import ObjectModificationRequest
-from .maps import Boundaries, Map, MapLayer
+from django.apps import apps
 
-__all__ = [
-    'User',
-    'Cemetery',
-    'CemeteryObject',
-    'Coordinates',
-    'Photo',
-    'ObjectModificationRequest',
-    'Boundaries',
-    'Map',
-    'MapLayer',
-]
+# Ленивая загрузка моделей
+def get_user_model():
+    return apps.get_model('users', 'User')
+
+def get_cemetery_model():
+    return apps.get_model('cemeteries', 'Cemetery')
+
+def get_burial_model():
+    return apps.get_model('burials', 'Burial')
+
+# Список экспорта ленивых функций
+__all__ = ['get_user_model', 'get_cemetery_model', 'get_burial_model']

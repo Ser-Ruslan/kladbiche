@@ -1,6 +1,6 @@
 from django.db import models
-from .users import User
-from .cemeteries import CemeteryObject
+from users.models import User
+from cemeteries.models import CemeteryObject
 
 class ObjectModificationRequest(models.Model):
     REQUEST_TYPES = (

@@ -1,5 +1,5 @@
 from django.db import models
-from .cemeteries import Cemetery, CemeteryObject, Coordinates
+from cemeteries.models import Cemetery, CemeteryObject, Coordinates
 
 class Boundaries(models.Model):
     north_east = models.OneToOneField(Coordinates, on_delete=models.CASCADE, related_name='north_east_boundary')

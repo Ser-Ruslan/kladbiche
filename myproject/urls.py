@@ -5,10 +5,11 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('cemetery_app.urls')),  # Подключаем URL-маршруты основного приложения
-    path('api/auth/', include('cemetery_app.urls.auth')),  # URL для аутентификации
+    path('api/users/', include('users.urls')),
+    path('api/cemeteries/', include('cemeteries.urls')),
+    path('api/maps/', include('maps.urls')),
+    path('api/notifications/', include('notifications.urls')),
 ]
 
-# Добавляем обработку медиа-файлов в режиме разработки
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -4,6 +4,8 @@ from . import views
 app_name = 'cemeteries'
 
 urlpatterns = [
+
+
     # Маршруты для кладбищ
     path('', views.CemeteryListView.as_view(), name='cemetery_list'),
     path('create/', views.CemeteryCreateView.as_view(), name='cemetery_create'),

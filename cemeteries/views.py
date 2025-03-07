@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, View
 from django.views.generic.edit import FormView
@@ -10,7 +10,11 @@ from django.core.exceptions import PermissionDenied
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
-# Кладбища
+
+def index(request):
+    return render(request, 'index.html')  # Це путь к корневому шаблону приложухи, в виду особенностий - просто имя файла
+
+# Модели кладбища
 class CemeteryListView(ListView):
     model = Cemetery
     template_name = 'cemeteries/cemetery_list.html'

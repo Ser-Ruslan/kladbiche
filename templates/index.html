@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Интерактивная карта</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <div class="main-container">
+    <!-- Левая панель -->
+    <div class="left-panel">
+      <!-- Блок поиска -->
+      <div class="search-bar">
+        <input type="text" placeholder="Поиск" />
+      </div>
+      <!-- Наименование текущей карты -->
+      <div class="map-name">
+        Наименование текущей карты
+      </div>
+      <!-- Контейнер для карты -->
+      <div class="map-container">
+        <img src="{% static 'media/main_map.svg' %}" alt="Интерактивная карта">
+      </div>
+    </div>
+
+    <!-- Разделительная линия -->
+    <div class="divider"></div>
+
+    <!-- Правая панель -->
+    <div class="right-panel">
+      <h2 class="map-title">Наименование карты</h2>
+      <div class="controls">
+        <a href="#">Показать всё</a>
+        <span> / </span>
+        <a href="#">Скрыть всё</a>
+      </div>
+      <ul class="layers-list">
+        <li>
+          <input type="checkbox" checked />
+          <span>Дорожки</span>
+          <span class="settings-link">Настройки группы</span>
+        </li>
+        <li>
+          <input type="checkbox" checked />
+          <span>Объекты</span>
+          <span class="settings-link">Настройки группы</span>
+        </li>
+        <li>
+          <input type="checkbox" checked />
+          <span>Мои заметки</span>
+          <span class="settings-link">Настройки группы</span>
+        </li>
+      </ul>
+      <ul class="notes-list">
+        {% if user.is_authenticated %}
+          <li>Заметка 1</li>
+          <li>Заметка 2</li>
+        {% endif %}
+      </ul>
+      <div class="auth-section">
+        {% if user.is_authenticated %}
+          <p>Добро пожаловать, {{ user.username }}!</p>
+          <button class="logout-button" onclick="window.location.href='{% url 'users:logout' %}'">
+            Выйти
+          </button>
+        {% else %}
+          <button class="auth-button" onclick="window.location.href='{% url 'users:login' %}'">
+            Авторизация
+          </button>
+          <p class="register-hint">
+            Нет аккаунта? 
+            <a href="{% url 'users:register' %}">Регистрация</a>
+          </p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+/* auth.css */
+
+/* Градиентный фон для всего экрана */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(to right, #4facfe, #00f2fe);
+    /* При желании можно сделать фон зафиксированным: */
+    background-attachment: fixed;
+    color: #333;
+  }
+  
+  /* Контейнер для формы (регистрация/авторизация) */
+  .auth-container {
+    width: 400px;
+    max-width: 90%;
+    margin: 5% auto; /* Отступ сверху и снизу 5% от высоты экрана */
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 10px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+    padding: 30px;
+    box-sizing: border-box;
+    text-align: center;
+  }
+  
+  /* Заголовок формы */
+  .auth-container h2 {
+    margin: 0 0 20px;
+    font-weight: 600;
+    color: #444;
+  }
+  
+  /* Стили для формы */
+  .auth-container form {
+    margin: 0;
+    padding: 0;
+    text-align: left;
+  }
+  
+  /* При использовании {{ form.as_p }}, каждый элемент формы обёрнут в <p> */
+  .auth-container form p {
+    margin-bottom: 15px;
+  }
+  
+  /* Метка (label) в форме */
+  .auth-container form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #555;
+  }
+  
+  /* Текстовые поля и поля пароля */
+  .auth-container form input[type="text"],
+  .auth-container form input[type="email"],
+  .auth-container form input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    transition: border-color 0.2s ease;
+    font-size: 14px;
+  }
+  
+  /* Подсветка фокуса в полях */
+  .auth-container form input[type="text"]:focus,
+  .auth-container form input[type="email"]:focus,
+  .auth-container form input[type="password"]:focus {
+    border-color: #4facfe;
+    outline: none;
+  }
+  
+  /* Кнопка отправки формы */
+  .auth-container button,
+  .auth-container input[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    background-color: #4facfe;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-top: 5px;
+  }
+  
+  .auth-container button:hover,
+  .auth-container input[type="submit"]:hover {
+    background-color: #00f2fe;
+  }
+  
+  /* Подписи и ссылки под формой */
+  .auth-container p {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 14px;
+  }
+  
+  .auth-container a {
+    color: #4facfe;
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  
+  .auth-container a:hover {
+    color: #00f2fe;
+    text-decoration: underline;
+  }
+  

@@ -1,0 +1,182 @@
+/* Сброс отступов и общие стили */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* Контейнер, который содержит левую и правую панели */
+.main-container {
+  display: flex;
+  height: 100vh; /* Занимаем всю высоту экрана */
+}
+
+/* Левая панель (серая область) */
+.left-panel {
+  flex: 1; /* Занимает всё доступное пространство слева */
+  background-color: #e0e0e0; /* Светло-серый фон */
+  display: flex;
+  flex-direction: column; /* Размещаем элементы сверху вниз */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Блок поиска */
+.search-bar {
+  margin-bottom: 10px;
+}
+
+.search-bar input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+/* Наименование текущей карты */
+.map-name {
+  margin-top: 20px;
+  font-size: 16px;
+  color: #333;
+}
+
+/* Контейнер для карты */
+.map-container {
+  flex: 1;             /* Занимает оставшееся пространство в левой панели */
+  margin-top: 20px;     /* Отступ между названием карты и картой */
+  overflow: auto;       /* Если содержимое превышает размеры, появляется прокрутка */
+  border: 1px solid #ccc; /* Тонкая рамка для отделения карты */
+  background-color: #fff; /* Фон карты */
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.map-container img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Разделитель между панелями */
+.divider {
+  width: 1px;
+  background-color: #ccc;
+}
+
+/* Правая панель (белая область) */
+.right-panel {
+  width: 300px; /* Фиксированная ширина, можно настроить */
+  background-color: #fff;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Заголовок карты в правой панели */
+.map-title {
+  margin-top: 0;
+  font-size: 18px;
+}
+
+/* Блок со ссылками "Показать всё" / "Скрыть всё" */
+.controls {
+  margin: 10px 0;
+}
+
+.controls a {
+  text-decoration: none;
+  color: #007bff;
+  margin-right: 5px;
+  font-size: 14px;
+}
+
+.controls a:hover {
+  text-decoration: underline;
+}
+
+/* Списки слоёв (Дорожки, Объекты, Мои заметки) */
+.layers-list,
+.notes-list {
+  list-style: none;
+  margin: 10px 0;
+  padding: 0;
+}
+
+.layers-list li,
+.notes-list li {
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+/* Ссылка "Настройки группы" */
+.settings-link {
+  margin-left: 8px;
+  font-size: 12px;
+  color: #007bff;
+  cursor: pointer;
+}
+
+.settings-link:hover {
+  text-decoration: underline;
+}
+
+/* Блок авторизации внизу правой панели */
+.auth-section {
+  margin-top: 20px;
+  text-align: center;
+}
+
+/* Стили для кнопки авторизации */
+.auth-button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.auth-button:hover {
+  background-color: #0056b3;
+}
+
+/* Подпись "Нет аккаунта?" */
+.register-hint {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.register-hint a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.register-hint a:hover {
+  text-decoration: underline;
+}
+
+/* Новые стили для авторизованного пользователя */
+
+/* Приветственное сообщение */
+.auth-section p {
+  margin: 10px 0;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Кнопка выхода */
+.logout-button {
+  padding: 10px 20px;
+  background-color: #dc3545; /* Красный цвет */
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
+}

@@ -6,6 +6,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from cemeteries.models import Cemetery
+from users.forms import  UserRegistrationForm
+from django.contrib.auth.views import LoginView, LogoutView
+from django.contrib.auth import login
 from users.models import User
 from notifications.models import ObjectModificationRequest
 
@@ -115,3 +118,31 @@ class CreateModificationRequestView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.user = self.request.user  # Устанавливаем текущего пользователя как автора
         return super().form_valid(form)
+    
+# Вьюшка регистрации пользователя
+class UserRegisterView(CreateView):
+    model = User
+    form_class = UserRegistrationForm
+    template_name = 'users/register.html'
+    success_url = reverse_lazy('index')  # можно сразу авторизовать пользователя и редиректить на главную
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        login(self.request, self.object)
+        return response
+
+# Вьюшка входа (используем стандартную вьюшку Django)
+class CustomLoginView(LoginView):
+    template_name = 'users/login.html'
+
+    def get_success_url(self):
+        return reverse_lazy('index')  # перенаправляем на главную страницу после успешного входа
+
+
+# Вьюшка выхода (logout) – можно использовать встроенную вьюшку Django
+class CustomLogoutView(LogoutView):
+    next_page = reverse_lazy('index')  # перенаправление на главную страницу после выхода
+    http_method_names = ['get', 'post']
+
+    def get(self, request, *args, **kwargs):
+        return self.post(request, *args, **kwargs)

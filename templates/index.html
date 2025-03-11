@@ -1,28 +1,32 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Интерактивная карта</title>
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <!-- Подключаем svg-pan-zoom -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/svg-pan-zoom/3.6.1/svg-pan-zoom.min.js"></script>
 </head>
-
 <body>
   <div class="main-container">
-    <!-- Левая панель -->
+    <!-- Левая панель (теперь на весь экран) -->
     <div class="left-panel">
-      <!-- Блок поиска -->
+      <!-- Блок поиска (поверх карты) -->
       <div class="search-bar">
         <input type="text" placeholder="Поиск" />
       </div>
-      <!-- Наименование текущей карты -->
+      
+      <!-- Наименование текущей карты (поверх карты) -->
       <div class="map-name">
         Наименование текущей карты
       </div>
-      <!-- Контейнер для карты -->
-      <div class="map-container">
-        <img src="{% static 'media/main_map.svg' %}" alt="Интерактивная карта">
+      
+      <!-- Контейнер для карты (на весь экран) -->
+      <div class="map-container" id="map-container">
+        <!-- Контейнер, в который вставляем inline SVG -->
+        <div id="svg-map"></div>
       </div>
     </div>
 
@@ -31,51 +35,56 @@
 
     <!-- Правая панель -->
     <div class="right-panel">
-      <div class="MapTitleBox"><h2 class="map-title">Наименование карты</h2></div>
-
+      <div class="MapTitleBox">
+        <h2 class="map-title">Наименование карты</h2>
+      </div>
       <div class="RightPanelContainer">
         <div class="controls">
-          <a href="#">Показать всё</a>
+          <a href="#" id="reset-view">Показать всю карту</a>
           <span> / </span>
-          <a href="#">Скрыть всё</a>
+          <a href="#" id="hide-all">Скрыть всё</a>
         </div>
         <ul class="layers-list">
           <li>
             <input class="Checkbox" type="checkbox" checked />
-            <span>Дорожки<img class="Icon" src="{% static 'media/Icons/free-icon-pin-mark-5826992.png' %}"
-                alt="Тык"></span>
+            <span>Дорожки
+              <img class="Icon" src="{% static 'media/Icons/free-icon-pin-mark-5826992.png' %}" alt="Тык">
+            </span>
           </li>
-
         </ul>
         <ul class="layers-list">
-          <span class="settingsText">Настройки группы</span> <span class="settings-link"><img class="IconSettings"
-              src="{% static 'media/Icons/free-icon-gear-1242494.png' %}" alt="Тык"></span>
+          <span class="settingsText">Настройки группы</span>
+          <span class="settings-link">
+            <img class="IconSettings" src="{% static 'media/Icons/free-icon-gear-1242494.png' %}" alt="Тык">
+          </span>
           <li>
             <input class="Checkbox" type="checkbox" checked />
-            <span>Объекты <img class="Icon" src="{% static 'media/Icons/free-icon-pin-mark-5826992.png' %}"
-                alt="Тык"></span>
-
+            <span>Объекты
+              <img class="Icon" src="{% static 'media/Icons/free-icon-pin-mark-5826992.png' %}" alt="Тык">
+            </span>
           </li>
-          <span class="settingsText">Настройки группы</span> <span class="settings-link"><img class="IconSettings"
-              src="{% static 'media/Icons/free-icon-gear-1242494.png' %}" alt="Тык"></span>
+          <span class="settingsText">Настройки группы</span>
+          <span class="settings-link">
+            <img class="IconSettings" src="{% static 'media/Icons/free-icon-gear-1242494.png' %}" alt="Тык">
+          </span>
         </ul>
-
         {% if user.is_authenticated %}
         <div>
           <ul class="layers-list">
             <li>
               <input class="Checkbox" type="checkbox" checked />
-              <span>Мои заметки<img class="Icon" src="{% static 'media/Icons/free-icon-pin-mark-5826992.png' %}"
-                  alt="Тык"></span>
-
+              <span>Мои заметки
+                <img class="Icon" src="{% static 'media/Icons/free-icon-pin-mark-5826992.png' %}" alt="Тык">
+              </span>
             </li>
-            <span class="settingsText">Настройки группы</span> <span class="settings-link"><img class="IconSettings"
-                src="{% static 'media/Icons/free-icon-gear-1242494.png' %}" alt="Тык"></span>
+            <span class="settingsText">Настройки группы</span>
+            <span class="settings-link">
+              <img class="IconSettings" src="{% static 'media/Icons/free-icon-gear-1242494.png' %}" alt="Тык">
+            </span>
           </ul>
         </div>
+        {% endif %}
       </div>
-      {% endif %}
-
     </div>
     <div class="auth-section">
       {% if user.is_authenticated %}
@@ -94,8 +103,12 @@
     </div>
   </div>
 
-
+  <!-- Передаём URL SVG-файла в переменную -->
+  <script>
+    var svgUrl = "{% static 'media/main_map.svg' %}";
+  </script>
+  <!-- Подключаем наш скрипт -->
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
   <script src="{% static 'js/script.js' %}"></script>
 </body>
-
 </html>

@@ -1,90 +1,80 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Загрузка SVG из файла
     fetch('/static/media/main_map.svg')
-      .then(response => response.text())
-      .then(svgContent => {
-        // Вставляем SVG в контейнер
-        document.getElementById('svg-map').innerHTML = svgContent;
-        
-        // Инициализация SVG-Pan-Zoom после того, как SVG загружен
-        const svgElement = document.querySelector('#svg-map svg');
-        if (svgElement) {
-          // Добавляем атрибуты для корректной работы
-          svgElement.setAttribute('width', '100%');
-          svgElement.setAttribute('height', '100%');
-          svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-          
-          // Инициализируем pan-zoom
-          const panZoom = svgPanZoom(svgElement, {
-            zoomEnabled: true,
-            controlIconsEnabled: true,
-            fit: true,
-            center: true,
-            minZoom: 0.5,
-            maxZoom: 10,
-            zoomScaleSensitivity: 0.3,
-            beforePan: function() {
-              return {x: true, y: true}; // Разрешаем панорамирование по обеим осям
-            }
-          });
-  
-          // Обработка события resize окна
-          window.addEventListener('resize', function() {
-            panZoom.resize();
-            panZoom.fit();
-            panZoom.center();
-          });
-          
-          // Привязываем кнопку "Показать всю карту" к функции сброса зума
-          document.getElementById('reset-view').addEventListener('click', function(e) {
-            e.preventDefault();
-            panZoom.reset();
-          });
-          
-          // Находим все интерактивные элементы в SVG
-          const interactiveElements = svgElement.querySelectorAll('path, rect, circle, polygon, g');
-          
-          // Добавляем класс для интерактивности
-          interactiveElements.forEach(element => {
-            element.classList.add('interactive');
+        .then(response => response.text())
+        .then(svgContent => {
+            // Вставляем SVG в контейнер
+            document.getElementById('svg-map').innerHTML = svgContent;
             
-            // Добавляем обработчик клика
-            element.addEventListener('click', function(event) {
-              // Предотвращаем распространение события, чтобы не сработал клик на родительских элементах
-              event.stopPropagation();
-              
-              // Удаляем класс active у всех элементов
-              interactiveElements.forEach(el => {
-                el.classList.remove('active');
-              });
-              
-              // Добавляем класс active текущему элементу
-              this.classList.add('active');
-              
-              // Получаем информацию об элементе
-              const elementId = this.id || 'unknown';
-              const elementType = this.tagName;
-              const elementTitle = this.getAttribute('title') || this.getAttribute('data-title') || 'Без названия';
-              
-              // Показываем название карты в правой панели
-              document.querySelector('.map-title').textContent = elementTitle;
-            });
-          });
-        }
-      })
-      .catch(error => {
-        console.error('Ошибка загрузки SVG:', error);
-        document.getElementById('svg-map').innerHTML = '<p style="padding: 20px; color: red;">Ошибка загрузки карты</p>';
-      });
-      
-    // Обработчик для кнопки "Скрыть всё"
-    document.getElementById('hide-all').addEventListener('click', function(e) {
-      e.preventDefault();
-      // Здесь можно реализовать логику скрытия всех слоев
-      const checkboxes = document.querySelectorAll('.layers-list input[type="checkbox"]');
-      checkboxes.forEach(checkbox => {
-        checkbox.checked = false;
-      });
-      // В реальном приложении здесь нужно будет еще скрыть соответствующие слои на карте
-    });
+            // Инициализация SVG-Pan-Zoom
+            const svgElement = document.querySelector('#svg-map svg');
+            if (svgElement) {
+                // Добавляем атрибуты для корректной работы
+                svgElement.setAttribute('width', '100%');
+                svgElement.setAttribute('height', '100%');
+                svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                
+                // Получаем viewBox SVG, если он есть
+                let viewBox = svgElement.getAttribute('viewBox');
+                if (!viewBox) {
+                    // Если viewBox не определен, устанавливаем его на основе размеров SVG
+                    const bbox = svgElement.getBBox();
+                    viewBox = `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`;
+                    svgElement.setAttribute('viewBox', viewBox);
+                }
+                
+                // Инициализируем pan-zoom
+                const panZoom = svgPanZoom(svgElement, {
+                    zoomEnabled: true,
+                    controlIconsEnabled: true,
+                    fit: true,
+                    center: true,
+                    minZoom: 0.5,
+                    maxZoom: 10,
+                    beforePan: function(oldPan, newPan) {
+                        // Получаем текущие размеры и масштаб
+                        const sizes = this.getSizes();
+                        
+                        // Размер SVG с учетом масштаба
+                        const scaledWidth = sizes.viewBox.width * sizes.realZoom;
+                        const scaledHeight = sizes.viewBox.height * sizes.realZoom;
+                        
+                        // Размер контейнера
+                        const containerWidth = sizes.width;
+                        const containerHeight = sizes.height;
+                        
+                        // Рассчитываем границы для перемещения
+                        // Левый предел: не позволяет увидеть пустое пространство справа от SVG
+                        const leftLimit = Math.min(0, containerWidth - scaledWidth);
+                        // Правый предел: не позволяет увидеть пустое пространство слева от SVG
+                        const rightLimit = 0;
+                        
+                        // Верхний предел: не позволяет увидеть пустое пространство снизу от SVG
+                        const topLimit = Math.min(0, containerHeight - scaledHeight);
+                        // Нижний предел: не позволяет увидеть пустое пространство сверху от SVG
+                        const bottomLimit = 0;
+                        
+                        // Применяем ограничения
+                        const customPan = {};
+                        customPan.x = Math.max(leftLimit, Math.min(rightLimit, newPan.x));
+                        customPan.y = Math.max(topLimit, Math.min(bottomLimit, newPan.y));
+                        
+                        return customPan;
+                    }
+                });
+                
+                // Обработка изменения размера окна
+                window.addEventListener('resize', function() {
+                    panZoom.resize();
+                    panZoom.fit();
+                    panZoom.center();
+                });
+            } else {
+                console.error('SVG элемент не найден');
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка загрузки SVG:', error);
+            document.getElementById('svg-map').innerHTML = '<p>Ошибка загрузки карты</p>';
+        });
 });

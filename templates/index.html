@@ -85,22 +85,23 @@
         </div>
         {% endif %}
       </div>
+      <div class="auth-section">
+        {% if user.is_authenticated %}
+        <p>Добро пожаловать, {{ user.username }}!</p>
+        <button class="logout-button" onclick="window.location.href='{% url 'users:logout' %}'">
+          Выйти
+        </button>
+        {% else %}
+        <button class="auth-button" onclick="window.location.href='{% url 'users:login' %}'">
+          Авторизация
+        </button>
+        <p>
+          <a class="register-hint" href="{% url 'users:register' %}">Нет аккаунта?</a>
+        </p>
+        {% endif %}
+      </div>
     </div>
-    <div class="auth-section">
-      {% if user.is_authenticated %}
-      <p>Добро пожаловать, {{ user.username }}!</p>
-      <button class="logout-button" onclick="window.location.href='{% url 'users:logout' %}'">
-        Выйти
-      </button>
-      {% else %}
-      <button class="auth-button" onclick="window.location.href='{% url 'users:login' %}'">
-        Авторизация
-      </button>
-      <p>
-        <a class="register-hint" href="{% url 'users:register' %}">Нет аккаунта?</a>
-      </p>
-      {% endif %}
-    </div>
+    
   </div>
 
   <!-- Передаём URL SVG-файла в переменную -->

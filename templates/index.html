@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
   <meta charset="UTF-8">
   <title>Интерактивная карта</title>
   {% load static %}
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
+
 <body>
   <div class="main-container">
     <!-- Левая панель -->
@@ -29,54 +31,71 @@
 
     <!-- Правая панель -->
     <div class="right-panel">
-      <h2 class="map-title">Наименование карты</h2>
-      <div class="controls">
-        <a href="#">Показать всё</a>
-        <span> / </span>
-        <a href="#">Скрыть всё</a>
-      </div>
-      <ul class="layers-list">
-        <li>
-          <input type="checkbox" checked />
-          <span>Дорожки</span>
-          <span class="settings-link">Настройки группы</span>
-        </li>
-        <li>
-          <input type="checkbox" checked />
-          <span>Объекты</span>
-          <span class="settings-link">Настройки группы</span>
-        </li>
-        <li>
-          <input type="checkbox" checked />
-          <span>Мои заметки</span>
-          <span class="settings-link">Настройки группы</span>
-        </li>
-      </ul>
-      <ul class="notes-list">
+      <div class="MapTitleBox"><h2 class="map-title">Наименование карты</h2></div>
+
+      <div class="RightPanelContainer">
+        <div class="controls">
+          <a href="#">Показать всё</a>
+          <span> / </span>
+          <a href="#">Скрыть всё</a>
+        </div>
+        <ul class="layers-list">
+          <li>
+            <input class="Checkbox" type="checkbox" checked />
+            <span>Дорожки<img class="Icon" src="{% static 'media/Icons/free-icon-pin-mark-5826992.png' %}"
+                alt="Тык"></span>
+          </li>
+
+        </ul>
+        <ul class="layers-list">
+          <span class="settingsText">Настройки группы</span> <span class="settings-link"><img class="IconSettings"
+              src="{% static 'media/Icons/free-icon-gear-1242494.png' %}" alt="Тык"></span>
+          <li>
+            <input class="Checkbox" type="checkbox" checked />
+            <span>Объекты <img class="Icon" src="{% static 'media/Icons/free-icon-pin-mark-5826992.png' %}"
+                alt="Тык"></span>
+
+          </li>
+          <span class="settingsText">Настройки группы</span> <span class="settings-link"><img class="IconSettings"
+              src="{% static 'media/Icons/free-icon-gear-1242494.png' %}" alt="Тык"></span>
+        </ul>
+
         {% if user.is_authenticated %}
-          <li>Заметка 1</li>
-          <li>Заметка 2</li>
-        {% endif %}
-      </ul>
-      <div class="auth-section">
-        {% if user.is_authenticated %}
-          <p>Добро пожаловать, {{ user.username }}!</p>
-          <button class="logout-button" onclick="window.location.href='{% url 'users:logout' %}'">
-            Выйти
-          </button>
-        {% else %}
-          <button class="auth-button" onclick="window.location.href='{% url 'users:login' %}'">
-            Авторизация
-          </button>
-          <p class="register-hint">
-            Нет аккаунта? 
-            <a href="{% url 'users:register' %}">Регистрация</a>
-          </p>
-        {% endif %}
+        <div>
+          <ul class="layers-list">
+            <li>
+              <input class="Checkbox" type="checkbox" checked />
+              <span>Мои заметки<img class="Icon" src="{% static 'media/Icons/free-icon-pin-mark-5826992.png' %}"
+                  alt="Тык"></span>
+
+            </li>
+            <span class="settingsText">Настройки группы</span> <span class="settings-link"><img class="IconSettings"
+                src="{% static 'media/Icons/free-icon-gear-1242494.png' %}" alt="Тык"></span>
+          </ul>
+        </div>
       </div>
+      {% endif %}
+
+    </div>
+    <div class="auth-section">
+      {% if user.is_authenticated %}
+      <p>Добро пожаловать, {{ user.username }}!</p>
+      <button class="logout-button" onclick="window.location.href='{% url 'users:logout' %}'">
+        Выйти
+      </button>
+      {% else %}
+      <button class="auth-button" onclick="window.location.href='{% url 'users:login' %}'">
+        Авторизация
+      </button>
+      <p>
+        <a class="register-hint" href="{% url 'users:register' %}">Нет аккаунта?</a>
+      </p>
+      {% endif %}
     </div>
   </div>
 
+
   <script src="{% static 'js/script.js' %}"></script>
 </body>
+
 </html>

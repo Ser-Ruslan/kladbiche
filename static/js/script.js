@@ -9,72 +9,81 @@ document.addEventListener('DOMContentLoaded', function() {
             // Инициализация SVG-Pan-Zoom
             const svgElement = document.querySelector('#svg-map svg');
             if (svgElement) {
-                // Добавляем атрибуты для корректной работы
+                // Устанавливаем атрибуты width/height в 100%
                 svgElement.setAttribute('width', '100%');
                 svgElement.setAttribute('height', '100%');
-                svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-                
-                // Получаем viewBox SVG, если он есть
+
+                // Получаем viewBox SVG
                 let viewBox = svgElement.getAttribute('viewBox');
                 if (!viewBox) {
-                    // Если viewBox не определен, устанавливаем его на основе размеров SVG
                     const bbox = svgElement.getBBox();
-                    viewBox = `${bbox.x} ${bbox.y} ${bbox.width} ${bbox.height}`;
+                    viewBox = `0 0 ${bbox.width} ${bbox.height}`;
                     svgElement.setAttribute('viewBox', viewBox);
                 }
-                
-                // Инициализируем pan-zoom
+
+                // Разбираем viewBox для установки границ панорамирования
+                const viewBoxValues = viewBox.split(' ').map(Number);
+                const viewBoxWidth = viewBoxValues[2];
+                const viewBoxHeight = viewBoxValues[3];
+
+                // Инициализация библиотеки
                 const panZoom = svgPanZoom(svgElement, {
                     zoomEnabled: true,
                     controlIconsEnabled: true,
                     fit: true,
                     center: true,
-                    minZoom: 0.5,
+                    minZoom: 1.9,
                     maxZoom: 10,
+                    zoomScaleSensitivity: 0.3,
+                    // Ограничения панорамирования
+                    panLimit: true,
+                    boundPadding: 0.1, // отступ от границ
+                    // Ограничения перетаскивания
+                    restrictPan: true,
+                    // Обработчики событий для более точного контроля
                     beforePan: function(oldPan, newPan) {
-                        // Получаем текущие размеры и масштаб
+                        // Ограничиваем перетаскивание границами SVG
                         const sizes = this.getSizes();
-                        
-                        // Размер SVG с учетом масштаба
-                        const scaledWidth = sizes.viewBox.width * sizes.realZoom;
-                        const scaledHeight = sizes.viewBox.height * sizes.realZoom;
-                        
-                        // Размер контейнера
-                        const containerWidth = sizes.width;
-                        const containerHeight = sizes.height;
-                        
-                        // Рассчитываем границы для перемещения
-                        // Левый предел: не позволяет увидеть пустое пространство справа от SVG
-                        const leftLimit = Math.min(0, containerWidth - scaledWidth);
-                        // Правый предел: не позволяет увидеть пустое пространство слева от SVG
-                        const rightLimit = 0;
-                        
-                        // Верхний предел: не позволяет увидеть пустое пространство снизу от SVG
-                        const topLimit = Math.min(0, containerHeight - scaledHeight);
-                        // Нижний предел: не позволяет увидеть пустое пространство сверху от SVG
-                        const bottomLimit = 0;
-                        
-                        // Применяем ограничения
-                        const customPan = {};
-                        customPan.x = Math.max(leftLimit, Math.min(rightLimit, newPan.x));
-                        customPan.y = Math.max(topLimit, Math.min(bottomLimit, newPan.y));
-                        
-                        return customPan;
+                        const restrictedPan = {
+                            x: Math.max(Math.min(newPan.x, 0), sizes.width - sizes.viewBox.width * sizes.realZoom),
+                            y: Math.max(Math.min(newPan.y, 0), sizes.height - sizes.viewBox.height * sizes.realZoom)
+                        };
+                        return restrictedPan;
+                    },
+                    beforeZoom: function(oldScale, newScale) {
+                        // Возвращаем true для разрешения зума
+                        return true;
                     }
                 });
-                
-                // Обработка изменения размера окна
-                window.addEventListener('resize', function() {
-                    panZoom.resize();
-                    panZoom.fit();
-                    panZoom.center();
+
+                // Обработчик события колеса мыши для SVG-контейнера
+                document.getElementById('svg-map').addEventListener('wheel', function(e) {
+                    // Если нажата клавиша Ctrl, блокируем зум SVG и позволяем браузеру масштабировать страницу
+                    if (e.ctrlKey) {
+                        e.stopPropagation();
+                        // Отключаем обработку события библиотекой svg-pan-zoom
+                        return true;
+                    }
+                    // Для обычного скролла (без Ctrl) позволяем svg-pan-zoom обрабатывать событие
+                }, { passive: false });
+
+                // Обработчик для блокировки стандартного поведения Ctrl+колесо при наведении на SVG
+                svgElement.addEventListener('wheel', function(e) {
+                    if (e.ctrlKey) {
+                        // Не блокируем стандартное поведение браузера при Ctrl+колесо
+                        return true;
+                    }
+                }, { passive: true });
+
+                // Дополнительный глобальный обработчик для восстановления зума после потери фокуса
+                window.addEventListener('focus', function() {
+                    if (panZoom) {
+                        panZoom.enableZoom();
+                    }
                 });
-            } else {
-                console.error('SVG элемент не найден');
             }
         })
         .catch(error => {
             console.error('Ошибка загрузки SVG:', error);
-            document.getElementById('svg-map').innerHTML = '<p>Ошибка загрузки карты</p>';
         });
 });

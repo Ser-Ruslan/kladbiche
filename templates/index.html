@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <!-- Подключаем svg-pan-zoom -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/svg-pan-zoom/3.6.1/svg-pan-zoom.min.js"></script>
+  <!-- Подключаем API Яндекс Карт с захардкоженным ключом -->
+  <script src="https://api-maps.yandex.ru/2.1/?apikey=69436f8e-f6b6-41bf-9606-13f8a73cc804&lang=ru_RU" type="text/javascript"></script>
 </head>
 <body>
   <div class="main-container">
@@ -24,16 +26,13 @@
       </div>
       
       <!-- Контейнер для карты (на весь экран) -->
-
       <div class="container-fluid">
         <div class="row">
             <div class="col-md-12">
                 <div id="map" style="width: 100%; height: 600px;"></div>
             </div>
         </div>
-    </div>
-    
- 
+      </div>
     </div>
 
     <!-- Разделительная линия -->
@@ -107,24 +106,49 @@
         {% endif %}
       </div>
     </div>
-    
   </div>
 
   <!-- Передаём URL SVG-файла в переменную -->
   <script>
     var svgUrl = "{% static 'media/main_map.svg' %}";
   </script>
-  <!-- Подключаем наш скрипт -->
   
-  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-  <script src="{% static 'js/script.js' %}"></script>
-  <script src="https://api-maps.yandex.ru/2.1/?apikey={{ yandex_maps_api_key }}&lang=ru_RU" type="text/javascript"></script>
-  <script>
-    var script = document.createElement('script');
-    script.src = 'https://api-maps.yandex.ru/services/constructor/1.0/js/?um=constructor%3A45faf95def7befa86a440d396c5a31af470d4341f525a7d08ae2b83f642d3ef5&width=100%&height=600&lang=ru_RU&scroll=true';
-    script.async = true;
-    document.getElementById('map-container').appendChild(script);
+  <!-- Инициализация Яндекс Карт -->
+  <script type="text/javascript">
+    // Дождемся загрузки API
+    ymaps.ready(function() {
+      try {
+        // Создание карты
+        var myMap = new ymaps.Map('map', {
+          center: [55.76, 37.64], // Координаты центра карты (Москва по умолчанию)
+          zoom: 10
+        });
+        
+        {% if geojson_data %}
+        // Загрузка GeoJSON данных, если они есть
+        var geojsonData = {{ geojson_data|safe }};
+        
+        // Создаем объекты на карте из GeoJSON
+        ymaps.geoQuery(geojsonData).addToMap(myMap);
+        
+        // Устанавливаем границы карты по данным
+        myMap.setBounds(myMap.geoObjects.getBounds(), {
+          checkZoomRange: true
+        });
+        {% endif %}
+        
+        // Добавляем элементы управления на карту
+        myMap.controls.add('zoomControl');
+        myMap.controls.add('typeSelector');
+        myMap.controls.add('searchControl');
+        
+      } catch(e) {
+        console.error("Ошибка инициализации карты:", e);
+      }
+    });
   </script>
-
+  
+  <!-- Подключаем наш скрипт -->
+  <script src="{% static 'js/script.js' %}"></script>
 </body>
 </html>

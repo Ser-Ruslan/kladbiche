@@ -1,6 +1,18 @@
 from django.db import models
 from cemeteries.models import Cemetery, CemeteryObject, Coordinates
 
+
+class GeoJSONMap(models.Model):
+    cemetery = models.OneToOneField(Cemetery, on_delete=models.CASCADE, related_name='geojson_map')
+    name = models.CharField(max_length=255)
+    geojson_data = models.JSONField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.cemetery.name})"
+    
+    
 class Boundaries(models.Model):
     north_east = models.OneToOneField(Coordinates, on_delete=models.CASCADE, related_name='north_east_boundary')
     south_west = models.OneToOneField(Coordinates, on_delete=models.CASCADE, related_name='south_west_boundary')

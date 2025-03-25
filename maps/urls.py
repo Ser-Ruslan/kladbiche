@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import IndexView
 
 app_name = 'maps'
 
@@ -17,4 +18,10 @@ urlpatterns = [
     # Генерация карты и визуализация
     path('cemetery/<int:cemetery_id>/render/', views.RenderCemeteryMapView.as_view(), name='render_cemetery_map'),
     path('cemetery/<int:cemetery_id>/search/', views.SearchOnMapView.as_view(), name='search_on_map'),
+
+    # Карты
+    path('cemetery/<int:cemetery_id>/map/', views.CemeteryMapView.as_view(), name='cemetery_map'),
+    path('cemetery/<int:cemetery_id>/map/upload/', views.LoadGeoJSONView.as_view(), name='upload_geojson'),
+    path('', IndexView.as_view(), name='index'),
+    path('load-geojson/', views.load_geojson, name='load_geojson'),
 ]

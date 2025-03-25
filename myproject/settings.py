@@ -23,6 +23,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-xqzs$pj6fpta@bg(jfw&!w&yj^afbf&nmk4h+&++r3g+*l9ldh'
 
+
+# Настройки Яндекс Карт
+YANDEX_MAPS_API_KEY = '3a7023b9-4693-4fa4-a7a9-c5a2ae1420ef'
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 

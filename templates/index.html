@@ -25,9 +25,15 @@
       
       <!-- Контейнер для карты (на весь экран) -->
 
-        <!-- Контейнер, в который вставляем inline SVG -->
-        <div class="map-container" id="svg-map"></div>
-
+      <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div id="map" style="width: 100%; height: 600px;"></div>
+            </div>
+        </div>
+    </div>
+    
+ 
     </div>
 
     <!-- Разделительная линия -->
@@ -109,7 +115,16 @@
     var svgUrl = "{% static 'media/main_map.svg' %}";
   </script>
   <!-- Подключаем наш скрипт -->
+  
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
   <script src="{% static 'js/script.js' %}"></script>
+  <script src="https://api-maps.yandex.ru/2.1/?apikey={{ yandex_maps_api_key }}&lang=ru_RU" type="text/javascript"></script>
+  <script>
+    var script = document.createElement('script');
+    script.src = 'https://api-maps.yandex.ru/services/constructor/1.0/js/?um=constructor%3A45faf95def7befa86a440d396c5a31af470d4341f525a7d08ae2b83f642d3ef5&width=100%&height=600&lang=ru_RU&scroll=true';
+    script.async = true;
+    document.getElementById('map-container').appendChild(script);
+  </script>
+
 </body>
 </html>

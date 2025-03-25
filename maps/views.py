@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, HttpResponse
-from django.views.generic import ListView, DetailView, View
+from django.views.generic import ListView, DetailView, View, TemplateView
 from django.views.generic.edit import FormView
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
@@ -8,7 +8,95 @@ from cemeteries.models import Cemetery, CemeteryObject, Coordinates
 from .models import Map, MapLayer, Boundaries
 from django.contrib.auth.mixins import LoginRequiredMixin
 import json
+from django.core.files.base import ContentFile
+from myproject import settings
+from maps.models import GeoJSONMap
+from pathlib import Path
 
+
+def load_geojson(request):
+    # Путь к вашему файлу GeoJSON
+    geojson_path = Path('maps/map/central_cemeterie.geojson')
+    
+    with open(geojson_path, 'r', encoding='utf-8') as f:
+        geojson_data = json.load(f)
+    
+    # Получаем первое кладбище (или создайте его, если нет)
+    cemetery = Cemetery.objects.first()
+    if not cemetery:
+        cemetery = Cemetery.objects.create(name="Центральное кладбище")
+    
+    # Создаем или обновляем карту
+    GeoJSONMap.objects.update_or_create(
+        cemetery=cemetery,
+        defaults={
+            'name': geojson_data.get('metadata', {}).get('name', 'Unnamed Map'),
+            'geojson_data': geojson_data
+        }
+    )
+    
+    return HttpResponse("GeoJSON успешно загружен")
+
+
+class IndexView(TemplateView):
+    template_name = 'index.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Получаем данные для карты (пример для первого кладбища)
+        try:
+            cemetery = Cemetery.objects.first()
+            geojson_map = cemetery.geojson_map
+            context['geojson_data'] = json.dumps(geojson_map.geojson_data)
+        except (Cemetery.DoesNotExist, GeoJSONMap.DoesNotExist):
+            context['geojson_data'] = None
+        
+        context['yandex_maps_api_key'] = settings.YANDEX_MAPS_API_KEY
+        return context
+    
+
+class LoadGeoJSONView(LoginRequiredMixin, View):
+    def post(self, request, cemetery_id):
+        cemetery = get_object_or_404(Cemetery, pk=cemetery_id)
+        geojson_file = request.FILES.get('geojson_file')
+        
+        if not geojson_file:
+            return JsonResponse({"error": "No file uploaded"}, status=400)
+        
+        try:
+            geojson_data = json.load(geojson_file)
+            
+            # Создаем или обновляем карту
+            GeoJSONMap.objects.update_or_create(
+                cemetery=cemetery,
+                defaults={
+                    'name': geojson_data.get('metadata', {}).get('name', 'Unnamed Map'),
+                    'geojson_data': geojson_data
+                }
+            )
+            
+            return JsonResponse({"message": "Map uploaded successfully"})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+class CemeteryMapView(TemplateView):
+    template_name = 'maps/cemetery_map.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        cemetery_id = kwargs.get('cemetery_id')
+        cemetery = get_object_or_404(Cemetery, pk=cemetery_id)
+        
+        try:
+            geojson_map = cemetery.geojson_map
+            context['geojson_data'] = json.dumps(geojson_map.geojson_data)
+        except GeoJSONMap.DoesNotExist:
+            context['geojson_data'] = None
+        
+        context['cemetery'] = cemetery
+        context['yandex_maps_api_key'] = settings.YANDEX_MAPS_API_KEY
+        return context
 
 # ===== COORDINATES =====
 class CoordinatesListView(ListView):

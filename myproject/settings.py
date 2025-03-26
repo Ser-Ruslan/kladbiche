@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-xqzs$pj6fpta@bg(jfw&!w&yj^afbf&nmk4h+&++r3g+*l9ldh
 
 
 # Настройки Яндекс Карт
-YANDEX_MAPS_API_KEY = '3a7023b9-4693-4fa4-a7a9-c5a2ae1420ef'
+YANDEX_MAPS_API_KEY = '69436f8e-f6b6-41bf-9606-13f8a73cc804'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -74,6 +74,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'myproject.context_processors.yandex_maps_api_key',
             ],
         },
     },

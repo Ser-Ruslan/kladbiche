@@ -1,3 +1,5 @@
+import csv
+import os
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse, HttpResponse
 from django.views.generic import ListView, DetailView, View, TemplateView
@@ -15,27 +17,27 @@ from pathlib import Path
 
 
 def load_geojson(request):
-    # Путь к вашему файлу GeoJSON
-    geojson_path = Path('maps/map/central_cemeterie.geojson')
+    geojson_path = os.path.join(settings.BASE_DIR, 'static', 'map', 'central_cemeterie.geojson')
     
-    with open(geojson_path, 'r', encoding='utf-8') as f:
-        geojson_data = json.load(f)
-    
-    # Получаем первое кладбище (или создайте его, если нет)
-    cemetery = Cemetery.objects.first()
-    if not cemetery:
-        cemetery = Cemetery.objects.create(name="Центральное кладбище")
-    
-    # Создаем или обновляем карту
-    GeoJSONMap.objects.update_or_create(
-        cemetery=cemetery,
-        defaults={
-            'name': geojson_data.get('metadata', {}).get('name', 'Unnamed Map'),
-            'geojson_data': geojson_data
-        }
-    )
-    
-    return HttpResponse("GeoJSON успешно загружен")
+    try:
+        with open(geojson_path, 'r', encoding='utf-8') as f:
+            geojson_data = json.load(f)
+        
+        cemetery = Cemetery.objects.first()
+        if not cemetery:
+            cemetery = Cemetery.objects.create(name="Центральное кладбище")
+        
+        GeoJSONMap.objects.update_or_create(
+            cemetery=cemetery,
+            defaults={
+                'name': geojson_data.get('metadata', {}).get('name', 'Unnamed Map'),
+                'geojson_data': geojson_data
+            }
+        )
+        
+        return HttpResponse("GeoJSON успешно загружен")
+    except Exception as e:
+        return HttpResponse(f"Ошибка при загрузке GeoJSON: {str(e)}", status=500)
 
 
 class IndexView(TemplateView):
@@ -43,16 +45,24 @@ class IndexView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['yandex_maps_api_key'] = settings.YANDEX_MAPS_API_KEY
         
-        # Получаем данные для карты (пример для первого кладбища)
         try:
             cemetery = Cemetery.objects.first()
-            geojson_map = cemetery.geojson_map
-            context['geojson_data'] = json.dumps(geojson_map.geojson_data)
-        except (Cemetery.DoesNotExist, GeoJSONMap.DoesNotExist):
+            if cemetery:
+                geojson_map = cemetery.geojson_map
+                if geojson_map:
+                    context['geojson_data'] = json.dumps(geojson_map.geojson_data)
+                else:
+                    print("GeoJSON map not found for cemetery")
+                    context['geojson_data'] = None
+            else:
+                print("No cemetery found")
+                context['geojson_data'] = None
+        except Exception as e:
+            print(f"Error loading GeoJSON data: {e}")
             context['geojson_data'] = None
         
-        context['yandex_maps_api_key'] = settings.YANDEX_MAPS_API_KEY
         return context
     
 

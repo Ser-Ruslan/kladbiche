@@ -1,154 +1,110 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Интерактивная карта</title>
-  {% load static %}
-  <link rel="stylesheet" href="{% static 'css/style.css' %}">
-  <!-- Подключаем svg-pan-zoom -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/svg-pan-zoom/3.6.1/svg-pan-zoom.min.js"></script>
-  <!-- Подключаем API Яндекс Карт с захардкоженным ключом -->
-  <script src="https://api-maps.yandex.ru/2.1/?apikey=69436f8e-f6b6-41bf-9606-13f8a73cc804&lang=ru_RU" type="text/javascript"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерактивная карта</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="https://api-maps.yandex.ru/2.1/?apikey={{ yandex_maps_api_key }}&lang=ru_RU" type="text/javascript"></script>
+    <style>
+        #map {
+            width: 100%;
+            height: 600px;
+            margin: 0;
+            padding: 0;
+        }
+        .left-panel {
+            width: 70%;
+            padding: 20px;
+        }
+        .right-panel {
+            width: 30%;
+            padding: 20px;
+        }
+    </style>
 </head>
 <body>
-  <div class="main-container">
-    <!-- Левая панель (теперь на весь экран) -->
-    <div class="left-panel">
-      <!-- Блок поиска (поверх карты) -->
-      <div class="search-bar">
-        <input type="text" placeholder="Поиск" />
-      </div>
-      
-      <!-- Наименование текущей карты (поверх карты) -->
-      <div class="map-name">
-        Наименование текущей карты
-      </div>
-      
-      <!-- Контейнер для карты (на весь экран) -->
-      <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <div id="map" style="width: 100%; height: 600px;"></div>
+    <div class="main-container">
+        <!-- Левая панель -->
+        <div class="left-panel">
+            <!-- Поиск -->
+            <div class="search-bar">
+                <input type="text" placeholder="Поиск" />
+            </div>
+            <div class="map-name">
+                Наименование текущей карты
+            </div>
+            <!-- Контейнер для карты -->
+            <div id="map"></div>
+        </div>
+
+        <!-- Правая панель -->
+        <div class="right-panel">
+            <div class="MapTitleBox">
+                <h2 class="map-title">Наименование карты</h2>
+            </div>
+            <div class="RightPanelContainer">
+                <!-- Слои, настройки, и т.д. -->
+            </div>
+            <div class="auth-section">
+                {% if user.is_authenticated %}
+                    <p>Добро пожаловать, {{ user.username }}!</p>
+                    <button class="logout-button" onclick="window.location.href='{% url 'users:logout' %}'">
+                        Выйти
+                    </button>
+                {% else %}
+                    <button class="auth-button" onclick="window.location.href='{% url 'users:login' %}'">
+                        Авторизация
+                    </button>
+                    <p>
+                        <a class="register-hint" href="{% url 'users:register' %}">Нет аккаунта?</a>
+                    </p>
+                {% endif %}
             </div>
         </div>
-      </div>
     </div>
 
-    <!-- Разделительная линия -->
-    <div class="divider"></div>
-
-    <!-- Правая панель -->
-    <div class="right-panel">
-      <div class="MapTitleBox">
-        <h2 class="map-title">Наименование карты</h2>
-      </div>
-      <div class="RightPanelContainer">
-        <div class="controls">
-          <a href="#" id="reset-view">Показать всю карту</a>
-          <span> / </span>
-          <a href="#" id="hide-all">Скрыть всё</a>
-        </div>
-        <ul class="layers-list">
-          <li>
-            <input class="Checkbox" type="checkbox" checked />
-            <span>Дорожки
-              <img class="Icon" src="{% static 'media/Icons/free-icon-pin-mark-5826992.png' %}" alt="Тык">
-            </span>
-          </li>
-        </ul>
-        <ul class="layers-list">
-          <span class="settingsText">Настройки группы</span>
-          <span class="settings-link">
-            <img class="IconSettings" src="{% static 'media/Icons/free-icon-gear-1242494.png' %}" alt="Тык">
-          </span>
-          <li>
-            <input class="Checkbox" type="checkbox" checked />
-            <span>Объекты
-              <img class="Icon" src="{% static 'media/Icons/free-icon-pin-mark-5826992.png' %}" alt="Тык">
-            </span>
-          </li>
-          <span class="settingsText">Настройки группы</span>
-          <span class="settings-link">
-            <img class="IconSettings" src="{% static 'media/Icons/free-icon-gear-1242494.png' %}" alt="Тык">
-          </span>
-        </ul>
-        {% if user.is_authenticated %}
-        <div>
-          <ul class="layers-list">
-            <li>
-              <input class="Checkbox" type="checkbox" checked />
-              <span>Мои заметки
-                <img class="Icon" src="{% static 'media/Icons/free-icon-pin-mark-5826992.png' %}" alt="Тык">
-              </span>
-            </li>
-            <span class="settingsText">Настройки группы</span>
-            <span class="settings-link">
-              <img class="IconSettings" src="{% static 'media/Icons/free-icon-gear-1242494.png' %}" alt="Тык">
-            </span>
-          </ul>
-        </div>
-        {% endif %}
-      </div>
-      <div class="auth-section">
-        {% if user.is_authenticated %}
-        <p>Добро пожаловать, {{ user.username }}!</p>
-        <button class="logout-button" onclick="window.location.href='{% url 'users:logout' %}'">
-          Выйти
-        </button>
-        {% else %}
-        <button class="auth-button" onclick="window.location.href='{% url 'users:login' %}'">
-          Авторизация
-        </button>
-        <p>
-          <a class="register-hint" href="{% url 'users:register' %}">Нет аккаунта?</a>
-        </p>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <!-- Передаём URL SVG-файла в переменную -->
-  <script>
-    var svgUrl = "{% static 'media/main_map.svg' %}";
-  </script>
-  
-  <!-- Инициализация Яндекс Карт -->
-  <script type="text/javascript">
-    // Дождемся загрузки API
-    ymaps.ready(function() {
-      try {
-        // Создание карты
-        var myMap = new ymaps.Map('map', {
-          center: [55.76, 37.64], // Координаты центра карты (Москва по умолчанию)
-          zoom: 10
-        });
-        
+    <script>
+    ymaps.ready(function () {
         {% if geojson_data %}
-        // Загрузка GeoJSON данных, если они есть
-        var geojsonData = {{ geojson_data|safe }};
-        
-        // Создаем объекты на карте из GeoJSON
-        ymaps.geoQuery(geojsonData).addToMap(myMap);
-        
-        // Устанавливаем границы карты по данным
-        myMap.setBounds(myMap.geoObjects.getBounds(), {
-          checkZoomRange: true
-        });
+            var geoJsonData = {{ geojson_data|safe }};
+            
+            // Создаем карту
+            var map = new ymaps.Map('map', {
+                center: [52.06, 113.52],
+                zoom: 15,
+                controls: ['zoomControl', 'typeSelector', 'searchControl']
+            });
+
+            // Преобразуем GeoJSON в объекты Яндекс.Карт
+            var geoObjects = ymaps.geoQuery(geoJsonData).addToMap(map);
+
+            // Устанавливаем границы карты по добавленным объектам
+            var bounds = geoObjects.getBounds();
+            if (bounds) {
+                map.setBounds(bounds, {
+                    checkZoomRange: true,
+                    zoomMargin: 50
+                });
+            }
+
+        {% else %}
+            console.error('GeoJSON data not available');
+            // Показываем пустую карту
+            var map = new ymaps.Map('map', {
+                center: [52.06, 113.52],
+                zoom: 15,
+                controls: ['zoomControl', 'typeSelector', 'searchControl']
+            });
         {% endif %}
-        
-        // Добавляем элементы управления на карту
-        myMap.controls.add('zoomControl');
-        myMap.controls.add('typeSelector');
-        myMap.controls.add('searchControl');
-        
-      } catch(e) {
-        console.error("Ошибка инициализации карты:", e);
-      }
     });
-  </script>
-  
-  <!-- Подключаем наш скрипт -->
-  <script src="{% static 'js/script.js' %}"></script>
+    </script>
+
+    <script>
+    console.log("API ключ:", "{{ yandex_maps_api_key }}");
+    console.log("GeoJSON данные:", {% if geojson_data %}{{ geojson_data|safe }}{% else %}null{% endif %});
+</script>
+
 </body>
 </html>

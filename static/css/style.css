@@ -1,252 +1,208 @@
-/* Сброс отступов и общие стили */
-body, html {
+/* Reset default styles */
+html, body {
   margin: 0;
   padding: 0;
-  font-family: Arial, sans-serif;
   height: 100%;
   width: 100%;
   overflow: hidden;
 }
 
-/* Контейнер, который содержит левую и правую панели */
+/* Main container */
 .main-container {
-  position:absolute;
   display: flex;
   height: 100vh;
-  width: 100%;
-  overflow: hidden;
-  margin-left: 0%;
-}
-
-/* Левая панель (серая область) */
-.left-panel {
+  width: 100vw;
   position: relative;
-  flex: 1;
-  background-color: #e0e0e0;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  box-sizing: border-box;
-  height: 100%;
-  overflow: hidden;
-  min-width: 0; /* Важно для корректного flex-размера */
-  align-items: center;
 }
 
-.Checkbox {
-  cursor: pointer;  
-}
-
-/* Блок поиска */
-.search-bar {
-  margin-bottom: 10px;
-  z-index: 3;
-  width: 30%;
-  border-radius: 15%;
-}
-
-.search-bar input[type="text"] {
+/* Map container */
+#map {
   width: 100%;
-  padding: 8px;
-  box-sizing: border-box;
-  
-}
-
-/* Наименование текущей карты */
-.map-name {
-  margin-top: 20px;
-  font-size: 16px;
-  color: #333;
-}
-
-/* Контейнер для карты */
-.map-container {
+  height: 100%;
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1; /* Чтобы карта была под поисковой строкой и названием карты */
+  z-index: 1;
 }
 
-#svg-map {
-
-
+/* Search panel */
+.search-panel {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 2;
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
-#svg-map svg {
-
-}
-
-/* Разделитель между панелями */
-.divider {
-  width: 1px;
-  background-color: #ccc;
-}
-
-/* Правая панель (белая область) */
+/* Right panel */
 .right-panel {
-  width: 300px; /* Фиксированная ширина, можно настроить */
-  background-color: #fff;
-  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-.RightPanelContainer {
-  padding-top: 5%;
-  padding-right: 15%;
-  padding-left: 5%;
-  flex: 1;
+  background: white;
+  z-index: 2;
+  box-shadow: -2px 0 6px rgba(0,0,0,0.1);
+  padding: 20px;
   overflow-y: auto;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
 }
 
-/* Заголовок карты в правой панели */
-.map-title {
-  font-size: 18px; 
-  display: inline-block;
-  margin: 0;
-  line-height: 2.5em;
-  vertical-align: middle;
+.right-panel.active {
+  transform: translateX(0);
 }
 
-.MapTitleBox {
-  margin: 0; /* Чтобы избежать отступов сверху или снизу */
-  padding: 0; /* Чтобы избежать внутренних отступов */
-  text-align: center;
-  box-sizing: border-box; /* Учитывает границы и внутренние отступы в ширину */
-  background-color: #dbdbdb;
-  width: 100%;
-  height: 2.5em;
-}
-
-/* Блок со ссылками "Показать всё" / "Скрыть всё" */
-.controls {
-  margin-top: 10px;
-  margin-left: 25%;
-}
-
-.controls a {
-  text-decoration: none;
-  color: #007bff;
-  font-size: 0.8em;
-}
-
-.controls a:hover {
-  text-decoration: underline;
-}
-
-/* иконочки йолки*/
-.Icon {
- height: 16px;
-}
-
-.IconSettings {
- height: 16px;
- margin-right: 1px;
- cursor: pointer;
-}
-
-/* Списки слоёв (Дорожки, Объекты, Мои заметки) */
-.layers-list {
-  list-style: none;
-  padding-left: 5px;
-  margin: 10px 0;
-}
-
-.layers-list li {
-  margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  font-size: 14px;
-}
-
-/* Ссылка "Настройки группы" */
-.settings-link {
-  margin-left: 8px;
-  font-size: 12px;
-  color: #007bff;
-  cursor: pointer;
-}
-
-.settingsText {
-  margin-left: 8px;
-  font-size: 12px;
-  color: #c5c5c5;
-}
-
-.settings-link:hover {
-  text-decoration: underline;
-}
-
-/* Блок авторизации внизу правой панели */
-.auth-section {
-  padding: 15px;
-  text-align: center;
-  background-color: #f9f9f9;
-  border-top: 1px solid #e0e0e0;
-}
-
-/* Стили для кнопки авторизации */
-.auth-button {
-  padding: 10px 20px;
-  background-color: #007bff;
+/* Panel toggle button */
+.panel-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 3;
+  background: white;
   border: none;
-  color: #fff;
+  padding: 10px;
+  border-radius: 4px;
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* Search bar */
+.search-bar input {
+  width: 300px;
+  padding: 8px;
+  border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 14px;
 }
 
-.auth-button:hover {
-  background-color: #0056b3;
+/* Auth section */
+.auth-section {
+  margin-top: 20px;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 4px;
 }
 
-/* Подпись "Нет аккаунта?" */
+.auth-button, 
+.logout-button {
+  width: 100%;
+  padding: 8px;
+  margin: 5px 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.auth-button {
+  background: #4CAF50;
+  color: white;
+}
+
+.logout-button {
+  background: #f44336;
+  color: white;
+}
+
+/* Map title box */
+.MapTitleBox {
+  margin-bottom: 20px;
+}
+
+.map-title {
+  font-size: 1.5em;
+  margin: 0;
+  padding: 10px 0;
+}
+
+/* Right panel container */
+.RightPanelContainer {
+  margin-bottom: 20px;
+}
+
+/* Register hint */
 .register-hint {
-  display: inline-block;
+  display: block;
+  text-align: center;
   margin-top: 10px;
-  font-size: 0.8em;
-  color: #007bff;
+  color: #666;
   text-decoration: none;
 }
 
 .register-hint:hover {
-  text-decoration: underline;
+  color: #333;
 }
 
-/* Приветственное сообщение */
-.auth-section p {
-  margin: 10px 0;
+/* Стили для секции слоев */
+.layers-section {
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.layers-section h3 {
+  margin: 0 0 10px 0;
   font-size: 16px;
-  font-weight: bold;
+  color: #333;
 }
 
-/* Кнопка выхода */
-.logout-button {
-  padding: 10px 20px;
-  background-color: #dc3545; /* Красный цвет */
-  border: none;
-  color: #fff;
-  cursor: pointer;
+.layers-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.layer-item {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  background: white;
   border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.layer-checkbox {
+  margin-right: 10px;
+}
+
+.layer-name {
   font-size: 14px;
-  margin-top: 10px;
+  color: #333;
 }
 
-.logout-button:hover {
-  background-color: #c82333;
+/* Стили для чекбоксов */
+.layer-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #4CAF50;
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.3s ease;
 }
 
-/* Стили для контролов svg-pan-zoom */
-.svg-pan-zoom-control {
+.layer-checkbox:checked {
+  background-color: #4CAF50;
+}
+
+.layer-checkbox:checked::after {
+  content: '✓';
   position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background-color: rgba(255, 255, 255, 0.7);
-  border-radius: 4px;
-  padding: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  color: white;
+  font-size: 14px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Hover эффект для элементов слоя */
+.layer-item:hover {
+  background: #f9f9f9;
 }

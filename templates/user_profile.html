@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}Личный кабинет - Карта кладбища{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Личный кабинет</h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title">Информация о пользователе</h4>
+                <p><strong>Имя пользователя:</strong> {{ user.username }}</p>
+                <p><strong>Имя:</strong> {{ user.first_name }}</p>
+                <p><strong>Фамилия:</strong> {{ user.last_name }}</p>
+                <p><strong>Email:</strong> {{ user.email }}</p>
+                <p><strong>Дата регистрации:</strong> {{ user.date_joined|date:"d.m.Y" }}</p>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Действия</h4>
+                <div class="list-group">
+                    <a href="{% url 'index' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-map-marked-alt mr-2"></i> Перейти к карте
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action" data-toggle="modal" data-target="add-burial-modal">
+                        <i class="fas fa-plus-circle mr-2"></i> Предложить новое захоронение
+                    </a>
+                    <a href="{% url 'search_burials' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-search mr-2"></i> Поиск захоронений
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <!-- Избранные захоронения -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title">Избранные захоронения</h4>
+                
+                {% if favorites %}
+                <div class="list-group">
+                    {% for favorite in favorites %}
+                    <a href="{% url 'burial_detail' favorite.burial.id %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ favorite.burial.full_name }}</h5>
+                            <small>{{ favorite.created_at|date:"d.m.Y" }}</small>
+                        </div>
+                        <p class="mb-1">
+                            {% if favorite.burial.birth_date %}{{ favorite.burial.birth_date|date:"d.m.Y" }}{% else %}Неизвестно{% endif %} - 
+                            {% if favorite.burial.death_date %}{{ favorite.burial.death_date|date:"d.m.Y" }}{% else %}Неизвестно{% endif %}
+                        </p>
+                        <small>{{ favorite.burial.cemetery.name }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">У вас пока нет избранных захоронений.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Запросы на добавление захоронений -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title">Ожидающие запросы на добавление</h4>
+                
+                {% if pending_requests %}
+                <div class="list-group">
+                    {% for request in pending_requests %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ request.full_name }}</h5>
+                            <small>{{ request.created_at|date:"d.m.Y" }}</small>
+                        </div>
+                        <p class="mb-1">
+                            {% if request.birth_date %}{{ request.birth_date|date:"d.m.Y" }}{% else %}Неизвестно{% endif %} - 
+                            {% if request.death_date %}{{ request.death_date|date:"d.m.Y" }}{% else %}Неизвестно{% endif %}
+                        </p>
+                        <p class="mb-1"><small>{{ request.description|truncatechars:100 }}</small></p>
+                        <span class="badge badge-warning">На рассмотрении</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">У вас нет активных запросов на добавление захоронений.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Обработанные запросы -->
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Обработанные запросы</h4>
+                
+                {% if processed_requests %}
+                <div class="list-group">
+                    {% for request in processed_requests %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ request.full_name }}</h5>
+                            <small>{{ request.updated_at|date:"d.m.Y" }}</small>
+                        </div>
+                        <p class="mb-1">
+                            {% if request.birth_date %}{{ request.birth_date|date:"d.m.Y" }}{% else %}Неизвестно{% endif %} - 
+                            {% if request.death_date %}{{ request.death_date|date:"d.m.Y" }}{% else %}Неизвестно{% endif %}
+                        </p>
+                        {% if request.status == 'approved' %}
+                            <p><a href="{% url 'burial_detail' request.approved_burial.id %}">Просмотреть на карте</a></p>
+                            <span class="badge badge-success">Одобрено</span>
+                        {% else %}
+                            <p><small>Причина отказа: {{ request.rejection_reason|default:"Не указана" }}</small></p>
+                            <span class="badge badge-danger">Отклонено</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted">У вас нет обработанных запросов.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для добавления захоронения -->
+<div id="add-burial-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>Предложить новое захоронение</h3>
+        <p>Чтобы предложить новое захоронение, перейдите на карту и отметьте его местоположение.</p>
+        <div class="text-center mt-4">
+            <a href="{% url 'index' %}" class="btn btn-primary">Перейти к карте</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

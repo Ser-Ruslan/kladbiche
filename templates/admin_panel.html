@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}Панель администратора - Карта кладбища{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h1 class="mb-4">Панель администратора</h1>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-body">
+                <h4 class="card-title">Действия</h4>
+                <div class="btn-group" role="group">
+                    <a href="{% url 'index' %}" class="btn btn-primary">
+                        <i class="fas fa-map-marked-alt mr-2"></i> Перейти к карте
+                    </a>
+                    <button class="btn btn-success" data-toggle="modal" data-target="admin-add-burial-modal">
+                        <i class="fas fa-plus-circle mr-2"></i> Добавить новое захоронение
+                    </button>
+                    <a href="/admin/" class="btn btn-secondary">
+                        <i class="fas fa-cog mr-2"></i> Перейти в панель Django-admin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">Запросы на добавление захоронений</h4>
+                <span class="badge badge-warning" id="pending-requests-count">{{ pending_requests|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if pending_requests %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Пользователь</th>
+                                <th>ФИО захороненного</th>
+                                <th>Даты жизни</th>
+                                <th>Дата запроса</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in pending_requests %}
+                            <tr id="request-{{ request.id }}">
+                                <td>{{ request.id }}</td>
+                                <td>{{ request.user.username }}</td>
+                                <td>{{ request.full_name }}</td>
+                                <td>
+                                    {% if request.birth_date %}{{ request.birth_date|date:"d.m.Y" }}{% else %}Неизвестно{% endif %} - 
+                                    {% if request.death_date %}{{ request.death_date|date:"d.m.Y" }}{% else %}Неизвестно{% endif %}
+                                </td>
+                                <td>{{ request.created_at|date:"d.m.Y H:i" }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-primary" onclick="openRequestDetailsModal({{ request.id }})">
+                                        <i class="fas fa-eye"></i> Просмотр
+                                    </button>
+                                    <button class="btn btn-sm btn-success approve-request" data-request-id="{{ request.id }}">
+                                        <i class="fas fa-check"></i> Одобрить
+                                    </button>
+                                    <button class="btn btn-sm btn-danger reject-request" data-request-id="{{ request.id }}">
+                                        <i class="fas fa-times"></i> Отклонить
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center text-muted">Нет запросов на рассмотрении.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для просмотра деталей запроса -->
+<div id="request-details-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>Детали запроса</h3>
+        <div id="request-details-content">
+            <!-- Содержимое загружается динамически -->
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Загрузка...</span>
+                </div>
+                <p>Загрузка данных...</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('request-details-modal')">Закрыть</button>
+            <button type="button" class="btn btn-success" id="modal-approve-btn">Одобрить</button>
+            <button type="button" class="btn btn-danger" id="modal-reject-btn">Отклонить</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно для добавления захоронения администратором -->
+<div id="admin-add-burial-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>Добавить новое захоронение</h3>
+        <p>Чтобы добавить новое захоронение, перейдите на карту и отметьте его местоположение.</p>
+        <div class="text-center mt-4">
+            <a href="{% url 'index' %}" class="btn btn-primary">Перейти к карте</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Функция для загрузки и отображения деталей запроса
+    function openRequestDetailsModal(requestId) {
+        const modal = document.getElementById('request-details-modal');
+        const content = document.getElementById('request-details-content');
+        const approveBtn = document.getElementById('modal-approve-btn');
+        const rejectBtn = document.getElementById('modal-reject-btn');
+        
+        // Показываем модальное окно
+        openModal('request-details-modal');
+        
+        // Загружаем данные
+        fetch(`/api/burial-requests/${requestId}/`)
+            .then(response => response.json())
+            .then(data => {
+                let birthDate = data.birth_date ? new Date(data.birth_date).toLocaleDateString('ru-RU') : 'Неизвестно';
+                let deathDate = data.death_date ? new Date(data.death_date).toLocaleDateString('ru-RU') : 'Неизвестно';
+                let createdAt = new Date(data.created_at).toLocaleString('ru-RU');
+                
+                // Формируем HTML с данными
+                let html = `
+                    <div class="request-details">
+                        <p><strong>ID запроса:</strong> ${data.id}</p>
+                        <p><strong>Пользователь:</strong> ${data.user}</p>
+                        <p><strong>ФИО захороненного:</strong> ${data.full_name}</p>
+                        <p><strong>Дата рождения:</strong> ${birthDate}</p>
+                        <p><strong>Дата смерти:</strong> ${deathDate}</p>
+                        <p><strong>Координаты:</strong> ${data.latitude}, ${data.longitude}</p>
+                        <p><strong>Дата запроса:</strong> ${createdAt}</p>
+                        
+                        <hr>
+                        
+                        <h5>Описание:</h5>
+                        <p>${data.description || 'Не указано'}</p>
+                        
+                        <div class="mt-4">
+                            <div id="request-map" style="height: 300px;"></div>
+                        </div>
+                    </div>
+                `;
+                
+                content.innerHTML = html;
+                
+                // Инициализируем карту для отображения местоположения
+                ymaps.ready(() => {
+                    const map = new ymaps.Map('request-map', {
+                        center: [data.latitude, data.longitude],
+                        zoom: 17
+                    });
+                    
+                    const marker = new ymaps.Placemark(
+                        [data.latitude, data.longitude],
+                        {
+                            hintContent: data.full_name
+                        },
+                        {
+                            preset: 'islands#redDotIcon'
+                        }
+                    );
+                    
+                    map.geoObjects.add(marker);
+                });
+                
+                // Настраиваем кнопки действий
+                approveBtn.setAttribute('data-request-id', data.id);
+                approveBtn.onclick = function() {
+                    processBurialRequest(data.id, 'approve');
+                    closeModal('request-details-modal');
+                };
+                
+                rejectBtn.setAttribute('data-request-id', data.id);
+                rejectBtn.onclick = function() {
+                    const reason = prompt('Укажите причину отклонения запроса:');
+                    if (reason !== null) {
+                        processBurialRequest(data.id, 'reject', reason);
+                        closeModal('request-details-modal');
+                    }
+                };
+            })
+            .catch(error => {
+                console.error('Ошибка при загрузке данных:', error);
+                content.innerHTML = '<div class="alert alert-danger">Произошла ошибка при загрузке данных</div>';
+            });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,41 @@
+<div class="sidebar-header">
+    <h2>Поиск захоронений</h2>
+</div>
+
+<div class="sidebar-body">
+    <!-- Search form -->
+    <div class="search-section">
+        <form id="search-form">
+            <div class="form-group">
+                <input type="text" id="search-query" class="search-input" placeholder="Поиск по ФИО...">
+            </div>
+            
+            <div class="search-filters">
+                <div class="filter-group">
+                    <label for="search-birth-date" class="filter-label">Дата рождения:</label>
+                    <input type="date" id="search-birth-date" class="form-control">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="search-death-date" class="filter-label">Дата смерти:</label>
+                    <input type="date" id="search-death-date" class="form-control">
+                </div>
+                
+                {% if user.is_authenticated %}
+                <div class="favorites-only">
+                    <input type="checkbox" id="favorites-only">
+                    <label for="favorites-only">Только избранные</label>
+                </div>
+                {% endif %}
+            </div>
+            
+            <button type="submit" class="search-button">Найти</button>
+        </form>
+    </div>
+    
+    <!-- Search results -->
+    <div id="search-results" class="search-results"></div>
+    
+    <!-- Grave details - will be loaded dynamically -->
+    <div id="sidebar-content"></div>
+</div>

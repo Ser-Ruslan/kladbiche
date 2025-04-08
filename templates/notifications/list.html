@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Уведомления{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1 class="mb-4">Ваши уведомления</h1>
+    
+    {% if notifications %}
+        <div class="d-flex justify-content-between mb-3">
+            <div>
+                <span class="text-muted">Всего: {{ notifications|length }}</span>
+                <span class="text-muted ml-3">Непрочитанных: {{ unread_count }}</span>
+            </div>
+            <a href="{% url 'mark_all_notifications_read' %}" class="btn btn-sm btn-outline-secondary">
+                Отметить все как прочитанные
+            </a>
+        </div>
+        
+        <!-- Уведомления для администраторов -->
+        {% if user.role == 'admin' %}
+            <h4 class="mt-4 mb-3">Уведомления администратора</h4>
+            <div class="list-group mb-4">
+                {% for notification in notifications %}
+                    {% if notification.notification_type == 'edit_proposal' %}
+                        <div class="list-group-item {% if not notification.is_read %}list-group-item-warning{% endif %}">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">
+                                    <i class="fas fa-edit text-primary"></i>
+                                    Предложение редактирования
+                                </h5>
+                                <small>{{ notification.created_at|date:"d.m.Y H:i" }}</small>
+                            </div>
+                            <p class="mb-1">{{ notification.message }}</p>
+                            
+                            {% if notification.related_id %}
+                                <div class="mt-2">
+                                    <a href="{% url 'admin:graves_editproposal_change' notification.related_id %}" class="btn btn-sm btn-outline-primary mr-2">
+                                        Модерировать предложение
+                                    </a>
+                                    <a href="{% url 'edit_proposal_detail' notification.related_id %}" class="btn btn-sm btn-link">
+                                        Просмотреть детали
+                                    </a>
+                                </div>
+                            {% endif %}
+                            
+                            {% if not notification.is_read %}
+                                <div class="mt-2">
+                                    <a href="{% url 'mark_notification_read' notification.id %}" class="btn btn-sm btn-outline-secondary">
+                                        Отметить как прочитанное
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <!-- Обычные уведомления -->
+        <h4 class="mt-4 mb-3">Общие уведомления</h4>
+        <div class="list-group">
+            {% for notification in notifications %}
+                {% if notification.notification_type != 'edit_proposal' or user.role != 'admin' %}
+                    <div class="list-group-item {% if not notification.is_read %}list-group-item-warning{% endif %}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">
+                                {% if notification.notification_type == 'system' %}
+                                    <i class="fas fa-info-circle text-info"></i>
+                                {% elif notification.notification_type == 'edit_proposal' %}
+                                    <i class="fas fa-edit text-primary"></i>
+                                {% elif notification.notification_type == 'proposal_status' %}
+                                    <i class="fas fa-check-circle text-success"></i>
+                                {% endif %}
+                                
+                                {% if notification.notification_type == 'system' %}
+                                    Системное уведомление
+                                {% elif notification.notification_type == 'edit_proposal' %}
+                                    Предложение редактирования
+                                {% elif notification.notification_type == 'proposal_status' %}
+                                    Статус предложения
+                                {% endif %}
+                            </h5>
+                            <small>{{ notification.created_at|date:"d.m.Y H:i" }}</small>
+                        </div>
+                        <p class="mb-1">{{ notification.message }}</p>
+                        
+                        {% if notification.notification_type == 'proposal_status' and notification.related_id %}
+                            <div class="mt-2">
+                                <a href="{% url 'edit_proposal_detail' notification.related_id %}" class="btn btn-sm btn-outline-primary mr-2">
+                                    Просмотреть это предложение
+                                </a>
+                                <a href="{% url 'my_proposals' %}" class="btn btn-sm btn-link">
+                                    Все мои предложения
+                                </a>
+                                
+                                {% with proposal_detail=notification.message|truncatewords:5 %}
+                                    {% if 'захоронения' in proposal_detail %}
+                                        {% with grave_name=proposal_detail|cut:'Ваше предложение по редактированию описания захоронения '|cut:'"'|cut:'" было' %}
+                                            {% for grave in graves %}
+                                                {% if grave.full_name == grave_name %}
+                                                    <a href="{% url 'map' %}?grave_id={{ grave.id }}" class="btn btn-sm btn-outline-info mt-2">
+                                                        Показать на карте
+                                                    </a>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% endwith %}
+                                    {% endif %}
+                                {% endwith %}
+                            </div>
+                        {% endif %}
+                        
+                        {% if not notification.is_read %}
+                            <div class="mt-2">
+                                <a href="{% url 'mark_notification_read' notification.id %}" class="btn btn-sm btn-outline-secondary">
+                                    Отметить как прочитанное
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        
+        {% if is_paginated %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">&laquo; Первая</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Предыдущая</a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="page-item active">
+                        <span class="page-link">
+                            Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}
+                        </span>
+                    </li>
+                    
+                    {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя &raquo;</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info">
+            У вас пока нет уведомлений. Все важные события будут отображаться здесь.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

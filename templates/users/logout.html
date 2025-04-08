@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Выход из системы | Интерактивная карта кладбища{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="text-center">Выход из системы</h3>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <p>Вы уверены, что хотите выйти из системы?</p>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-danger mr-2">Да, выйти</button>
+                        <a href="{% url 'map' %}" class="btn btn-secondary">Нет, остаться</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

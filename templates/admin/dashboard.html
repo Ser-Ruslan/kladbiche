@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Панель администратора | Интерактивная карта кладбища{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2>Панель администратора</h2>
+        <p class="lead">Добро пожаловать в панель управления, {{ user.username }}!</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Graves management -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Управление захоронениями</h5>
+            </div>
+            <div class="card-body">
+                <p>Добавление, редактирование и удаление захоронений на карте.</p>
+                <a href="{% url 'map' %}" class="btn btn-primary">Перейти к карте</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit proposals moderation -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="card-title mb-0">Модерация предложений</h5>
+            </div>
+            <div class="card-body">
+                <p>Рассмотрение предложений по редактированию от пользователей.</p>
+                <a href="{% url 'admin:graves_editproposal_changelist' %}" class="btn btn-warning">Управление предложениями</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- User management -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0">Управление пользователями</h5>
+            </div>
+            <div class="card-body">
+                <p>Просмотр, редактирование и блокировка учетных записей пользователей.</p>
+                <a href="{% url 'admin:users_user_changelist' %}" class="btn btn-info">Управление пользователями</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent edit proposals -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Последние предложения по редактированию</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Захоронение</th>
+                                <th>Пользователь</th>
+                                <th>Дата</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-proposals">
+                            <tr>
+                                <td colspan="5" class="text-center">Загрузка данных...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Recent users -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Недавно зарегистрированные пользователи</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Имя пользователя</th>
+                                <th>Email</th>
+                                <th>Дата регистрации</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recent-users">
+                            <tr>
+                                <td colspan="5" class="text-center">Загрузка данных...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Загрузка последних предложений
+        fetch('/api/edit-proposals/?limit=5')
+            .then(response => response.json())
+            .then(data => {
+                const proposalsTable = document.getElementById('recent-proposals');
+                
+                if (data.results && data.results.length > 0) {
+                    let html = '';
+                    data.results.forEach(proposal => {
+                        const statusClass = getStatusClass(proposal.status);
+                        const statusText = getStatusText(proposal.status);
+                        
+                        html += `
+                            <tr>
+                                <td>${proposal.grave_name}</td>
+                                <td>${proposal.user_username}</td>
+                                <td>${new Date(proposal.created_at).toLocaleString('ru')}</td>
+                                <td><span class="badge ${statusClass}">${statusText}</span></td>
+                                <td>
+                                    <a href="/admin/graves/editproposal/${proposal.id}/change/" class="btn btn-sm btn-outline-primary">
+                                        Подробнее
+                                    </a>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    proposalsTable.innerHTML = html;
+                } else {
+                    proposalsTable.innerHTML = '<tr><td colspan="5" class="text-center">Нет предложений по редактированию</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при загрузке предложений:', error);
+                document.getElementById('recent-proposals').innerHTML = 
+                    '<tr><td colspan="5" class="text-center text-danger">Ошибка при загрузке данных</td></tr>';
+            });
+        
+        // Загрузка недавних пользователей (административный API)
+        fetch('/admin/api/recent-users/')
+            .then(response => response.json())
+            .then(data => {
+                const usersTable = document.getElementById('recent-users');
+                
+                if (data.users && data.users.length > 0) {
+                    let html = '';
+                    data.users.forEach(user => {
+                        const statusClass = user.is_active ? 'badge-success' : 'badge-warning';
+                        const statusText = user.is_active ? 'Активен' : 'Не активирован';
+                        
+                        html += `
+                            <tr>
+                                <td>${user.username}</td>
+                                <td>${user.email}</td>
+                                <td>${new Date(user.date_joined).toLocaleString('ru')}</td>
+                                <td><span class="badge ${statusClass}">${statusText}</span></td>
+                                <td>
+                                    <a href="/admin/users/user/${user.id}/change/" class="btn btn-sm btn-outline-primary">
+                                        Подробнее
+                                    </a>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    usersTable.innerHTML = html;
+                } else {
+                    usersTable.innerHTML = '<tr><td colspan="5" class="text-center">Нет недавно зарегистрированных пользователей</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка при загрузке пользователей:', error);
+                document.getElementById('recent-users').innerHTML = 
+                    '<tr><td colspan="5" class="text-center text-danger">Ошибка при загрузке данных</td></tr>';
+            });
+    });
+    
+    function getStatusClass(status) {
+        switch(status) {
+            case 'pending': return 'badge-warning';
+            case 'approved': return 'badge-success';
+            case 'rejected': return 'badge-danger';
+            default: return 'badge-secondary';
+        }
+    }
+    
+    function getStatusText(status) {
+        switch(status) {
+            case 'pending': return 'На модерации';
+            case 'approved': return 'Одобрено';
+            case 'rejected': return 'Отклонено';
+            default: return 'Неизвестно';
+        }
+    }
+</script>
+{% endblock %}

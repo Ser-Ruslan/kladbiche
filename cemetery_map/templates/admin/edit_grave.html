@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ is_edit|yesno:"Редактирование,Добавление" }} захоронения | Интерактивная карта кладбища{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>{{ is_edit|yesno:"Редактирование,Добавление" }} захоронения</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" id="grave-form">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="form-group">
+                        <label for="{{ form.full_name.id_for_label }}">ФИО погребенного *</label>
+                        {{ form.full_name }}
+                        {% if form.full_name.errors %}
+                            <div class="text-danger">
+                                {% for error in form.full_name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.birth_date.id_for_label }}">Дата рождения</label>
+                        {{ form.birth_date }}
+                        {% if form.birth_date.errors %}
+                            <div class="text-danger">
+                                {% for error in form.birth_date.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.death_date.id_for_label }}">Дата смерти</label>
+                        {{ form.death_date }}
+                        {% if form.death_date.errors %}
+                            <div class="text-danger">
+                                {% for error in form.death_date.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.description.id_for_label }}">Описание</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger">
+                                {% for error in form.description.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if is_edit %}
+                        {{ form.polygon_coordinates }}
+                    {% else %}
+                        <div class="form-group">
+                            <label for="polygon-preview">Захоронение на карте</label>
+                            <div id="polygon-preview" style="height: 300px; margin-bottom: 15px;"></div>
+                            <p class="text-muted small">Для изменения формы захоронения на карте, вернитесь к карте и используйте функцию редактирования.</p>
+                            {{ form.polygon_coordinates }}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Сохранить</button>
+                        <a href="{% url 'map' %}" class="btn btn-secondary ml-2">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if not is_edit %}
+<!-- Для добавления нового захоронения - превью полигона на карте -->
+<script src="https://api-maps.yandex.ru/2.1/?apikey={{ yandex_maps_api_key }}&lang=ru_RU"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const polygonCoordinatesInput = document.getElementById('id_polygon_coordinates');
+        
+        // Инициализация карты для предварительного просмотра
+        ymaps.ready(function() {
+            const previewMap = new ymaps.Map('polygon-preview', {
+                center: [52.033635, 113.501049], // Центр кладбища
+                zoom: 17
+            });
+            
+            // Если есть координаты полигона, отображаем их
+            if (polygonCoordinatesInput.value) {
+                try {
+                    const coordinates = JSON.parse(polygonCoordinatesInput.value);
+                    const polygon = new ymaps.Polygon(
+                        coordinates,
+                        {},
+                        {
+                            fillColor: '#00FF00',
+                            strokeColor: '#0000FF',
+                            strokeWidth: 2,
+                            opacity: 0.5
+                        }
+                    );
+                    
+                    previewMap.geoObjects.add(polygon);
+                    
+                    // Центрируем карту на полигоне
+                    previewMap.setBounds(polygon.geometry.getBounds());
+                } catch (e) {
+                    console.error('Ошибка при отображении полигона:', e);
+                }
+            }
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

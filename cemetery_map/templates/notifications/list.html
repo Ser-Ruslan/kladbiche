@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Уведомления | Интерактивная карта кладбища{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Уведомления</h2>
+            {% if notifications %}
+                <button id="mark-all-read-btn" class="btn btn-outline-primary">
+                    <i class="fas fa-check-double"></i> Отметить все как прочитанные
+                </button>
+            {% endif %}
+        </div>
+        
+        {% if notifications %}
+            <div class="list-group" id="notifications-list">
+                {% for notification in notifications %}
+                    <div class="list-group-item list-group-item-action {% if not notification.is_read %}active{% endif %}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">
+                                {% if notification.notification_type == 'system' %}
+                                    <i class="fas fa-info-circle"></i>
+                                {% elif notification.notification_type == 'edit_proposal' %}
+                                    <i class="fas fa-edit"></i>
+                                {% elif notification.notification_type == 'proposal_status' %}
+                                    <i class="fas fa-clipboard-check"></i>
+                                {% endif %}
+                                {{ notification.get_notification_type_display }}
+                            </h5>
+                            <small>{{ notification.created_at|date:"d.m.Y H:i" }}</small>
+                        </div>
+                        <p class="mb-1">{{ notification.message }}</p>
+                        
+                        {% if not notification.is_read %}
+                            <button class="btn btn-sm btn-light mark-read-btn" data-id="{{ notification.id }}">
+                                Отметить как прочитанное
+                            </button>
+                        {% endif %}
+                        
+                        {% if notification.notification_type == 'edit_proposal' and user.role == 'admin' %}
+                            <a href="/admin/graves/editproposal/{{ notification.related_id }}/change/" class="btn btn-sm btn-primary mt-2">
+                                Просмотреть предложение
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <nav aria-label="Pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">Первая</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Предыдущая</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-info">
+                <p>У вас нет новых уведомлений.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Обработчик для кнопок "Отметить как прочитанное"
+        document.querySelectorAll('.mark-read-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const notificationId = this.dataset.id;
+                markNotificationAsRead(notificationId, this);
+            });
+        });
+        
+        // Обработчик для кнопки "Отметить все как прочитанные"
+        const markAllReadBtn = document.getElementById('mark-all-read-btn');
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
+        }
+    });
+    
+    /**
+     * Отметить уведомление как прочитанное
+     */
+    function markNotificationAsRead(notificationId, button) {
+        fetch(`/notifications/${notificationId}/mark-read/`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCsrfToken()
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Обновляем внешний вид элемента
+                const listItem = button.closest('.list-group-item');
+                listItem.classList.remove('active');
+                
+                // Удаляем кнопку
+                button.remove();
+                
+                // Обновляем счетчик непрочитанных уведомлений
+                updateUnreadCount();
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при отметке уведомления:', error);
+            alert('Произошла ошибка при отметке уведомления как прочитанного');
+        });
+    }
+    
+    /**
+     * Отметить все уведомления как прочитанные
+     */
+    function markAllNotificationsAsRead() {
+        fetch('/notifications/mark-all-read/', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': getCsrfToken()
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Обновляем внешний вид всех элементов
+                document.querySelectorAll('.list-group-item.active').forEach(item => {
+                    item.classList.remove('active');
+                });
+                
+                // Удаляем все кнопки отметки
+                document.querySelectorAll('.mark-read-btn').forEach(btn => {
+                    btn.remove();
+                });
+                
+                // Обновляем счетчик непрочитанных уведомлений
+                updateUnreadCount();
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при отметке всех уведомлений:', error);
+            alert('Произошла ошибка при отметке всех уведомлений как прочитанных');
+        });
+    }
+    
+    /**
+     * Обновление счетчика непрочитанных уведомлений
+     */
+    function updateUnreadCount() {
+        fetch('/notifications/unread-count/')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('notification-badge');
+                const badgeDropdown = document.getElementById('notification-badge-dropdown');
+                
+                if (data.count > 0) {
+                    if (badge) {
+                        badge.textContent = data.count;
+                        badge.style.display = 'inline-block';
+                    }
+                    
+                    if (badgeDropdown) {
+                        badgeDropdown.textContent = data.count;
+                        badgeDropdown.style.display = 'inline-block';
+                    }
+                } else {
+                    if (badge) badge.style.display = 'none';
+                    if (badgeDropdown) badgeDropdown.style.display = 'none';
+                }
+            })
+            .catch(error => console.error('Ошибка при обновлении счетчика уведомлений:', error));
+    }
+    
+    /**
+     * Получение CSRF-токена из cookies
+     */
+    function getCsrfToken() {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'csrftoken') {
+                return value;
+            }
+        }
+        return '';
+    }
+</script>
+{% endblock %}

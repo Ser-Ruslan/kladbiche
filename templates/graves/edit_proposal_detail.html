@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Подробности предложения по редактированию{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Подробности предложения</h1>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <span>Предложение #{{ proposal.id }}</span>
+            <span class="badge {% if proposal.status == 'pending' %}badge-warning{% elif proposal.status == 'approved' %}badge-success{% else %}badge-danger{% endif %}">
+                {% if proposal.status == 'pending' %}
+                    На рассмотрении
+                {% elif proposal.status == 'approved' %}
+                    Одобрено
+                {% else %}
+                    Отклонено
+                {% endif %}
+            </span>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">{{ proposal.grave.full_name }}</h5>
+            <p class="card-text">
+                <strong>Дата создания:</strong> {{ proposal.created_at|date:"d.m.Y H:i" }}
+            </p>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header">Текущее описание</div>
+                        <div class="card-body">
+                            <p>{{ proposal.grave.description|default:"Описание отсутствует" }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header">Предлагаемое описание</div>
+                        <div class="card-body">
+                            <p>{{ proposal.proposed_description }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if proposal.status == 'rejected' and proposal.rejection_reason %}
+                <div class="alert alert-danger mt-3">
+                    <h5>Причина отклонения:</h5>
+                    <p>{{ proposal.rejection_reason }}</p>
+                </div>
+            {% endif %}
+            
+            <div class="mt-4">
+                <a href="{% url 'my_proposals' %}" class="btn btn-secondary">Назад к списку</a>
+                
+                <a href="{% url 'map' %}?grave_id={{ proposal.grave.id }}" class="btn btn-info">
+                    Показать на карте
+                </a>
+                
+                {% if user.role == 'admin' and proposal.status == 'pending' %}
+                    <a href="{% url 'admin:graves_editproposal_change' proposal.id %}" class="btn btn-primary">
+                        Модерировать предложение
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

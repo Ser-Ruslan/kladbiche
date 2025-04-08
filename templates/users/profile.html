@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль | Интерактивная карта кладбища{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>Профиль пользователя</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="form-group">
+                        <label for="{{ form.email.id_for_label }}">Email:</label>
+                        {{ form.email }}
+                        <small class="form-text text-muted">Email нельзя изменить.</small>
+                        {% if form.email.errors %}
+                            <div class="text-danger">
+                                {% for error in form.email.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ form.username.id_for_label }}">Имя пользователя:</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="text-danger">
+                                {% for error in form.username.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4>Дополнительная информация</h4>
+            </div>
+            <div class="card-body">
+                <p><strong>Статус аккаунта:</strong> {% if user.is_active %}Активирован{% else %}Ожидает подтверждения{% endif %}</p>
+                <p><strong>Роль:</strong> {% if user.role == 'admin' %}Администратор{% else %}Пользователь{% endif %}</p>
+                <p><strong>Дата регистрации:</strong> {{ user.date_joined|date:"d.m.Y H:i" }}</p>
+                <p><strong>Последняя активность:</strong> {{ user.last_activity|date:"d.m.Y H:i" }}</p>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h4>Управление паролем</h4>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'password_reset' %}" class="btn btn-warning">Изменить пароль</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

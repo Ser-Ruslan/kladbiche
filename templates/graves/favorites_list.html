@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Избранные захоронения | Интерактивная карта кладбища{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="mb-4">Избранные захоронения</h2>
+        
+        {% if favorites %}
+            <div id="favorites-list" class="row">
+                {% for favorite in favorites %}
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ favorite.grave.full_name }}</h5>
+                            
+                            <h6 class="card-subtitle mb-2 text-muted">
+                                {% if favorite.grave.birth_date and favorite.grave.death_date %}
+                                    {{ favorite.grave.birth_date|date:"d.m.Y" }} - {{ favorite.grave.death_date|date:"d.m.Y" }}
+                                {% elif favorite.grave.birth_date %}
+                                    Родился: {{ favorite.grave.birth_date|date:"d.m.Y" }}
+                                {% elif favorite.grave.death_date %}
+                                    Умер: {{ favorite.grave.death_date|date:"d.m.Y" }}
+                                {% endif %}
+                            </h6>
+                            
+                            <p class="card-text">
+                                {% if favorite.grave.description %}
+                                    {{ favorite.grave.description|truncatechars:150 }}
+                                {% else %}
+                                    <em>Описание отсутствует</em>
+                                {% endif %}
+                            </p>
+                            
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'map' %}?grave_id={{ favorite.grave.id }}" class="btn btn-sm btn-primary">Показать на карте</a>
+                                <button data-grave-id="{{ favorite.grave.id }}" class="btn btn-sm btn-outline-danger remove-favorite-btn">
+                                    Удалить из избранного
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-footer text-muted small">
+                            Добавлено в избранное: {{ favorite.created_at|date:"d.m.Y H:i" }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <p>У вас пока нет избранных захоронений.</p>
+                <p>Вы можете добавить захоронение в избранное, нажав на кнопку "В избранное" в информации о захоронении на карте.</p>
+            </div>
+            <a href="{% url 'map' %}" class="btn btn-primary">Перейти к карте</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/favorites.js"></script>
+{% endblock %}

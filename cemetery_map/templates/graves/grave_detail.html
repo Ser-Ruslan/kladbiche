@@ -1,0 +1,88 @@
+<div class="grave-details">
+    <h3 class="grave-name">{{ grave.full_name }}</h3>
+    
+    <div class="grave-dates">
+        {% if grave.birth_date and grave.death_date %}
+            {{ grave.birth_date|date:"d.m.Y" }} - {{ grave.death_date|date:"d.m.Y" }}
+        {% elif grave.birth_date %}
+            Родился: {{ grave.birth_date|date:"d.m.Y" }}
+        {% elif grave.death_date %}
+            Умер: {{ grave.death_date|date:"d.m.Y" }}
+        {% endif %}
+    </div>
+    
+    {% if grave.description %}
+        <div class="grave-description">
+            {{ grave.description|linebreaks }}
+        </div>
+    {% else %}
+        <div class="grave-description text-muted">
+            Описание отсутствует.
+        </div>
+    {% endif %}
+    
+    {% if user.is_authenticated %}
+        <button id="favorite-button" class="favorite-button {% if is_favorite %}active{% endif %}">
+            {% if is_favorite %}
+                <i class="fas fa-heart"></i> В избранном
+            {% else %}
+                <i class="far fa-heart"></i> В избранное
+            {% endif %}
+        </button>
+    {% endif %}
+</div>
+
+{% if user.is_authenticated %}
+    <!-- Personal notes section -->
+    <div class="sidebar-section personal-notes">
+        <h4 class="sidebar-section-title">Личная заметка</h4>
+        
+        <div id="personal-note-container">
+            {% if personal_note %}
+                <div class="personal-note-text">{{ personal_note.text }}</div>
+            {% endif %}
+        </div>
+        
+        <form id="note-form" class="personal-note-form mt-2">
+            <div class="form-group">
+                <textarea id="note-text" class="form-control" rows="3" placeholder="Добавьте личную заметку...">{{ personal_note.text|default:'' }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-sm btn-primary">Сохранить заметку</button>
+        </form>
+    </div>
+    
+    <!-- Edit proposal section -->
+    <div class="sidebar-section edit-proposal">
+        <h4 class="sidebar-section-title">Предложить редактирование</h4>
+        
+        <div id="edit-proposal-success" style="display: none;">
+            <div class="alert alert-success">
+                Ваше предложение отправлено на рассмотрение. Спасибо за вклад в улучшение информации!
+            </div>
+        </div>
+        
+        <form id="edit-proposal-form" class="edit-proposal-form">
+            <div class="form-group">
+                <label for="edit-proposal-text">Предлагаемое описание:</label>
+                <textarea id="edit-proposal-text" class="form-control" rows="4" placeholder="Введите ваше предложение по редактированию описания...">{{ grave.description }}</textarea>
+                <small class="form-text text-muted">Ваше предложение будет рассмотрено администратором.</small>
+            </div>
+            <button type="submit" class="btn btn-sm btn-primary">Отправить предложение</button>
+        </form>
+    </div>
+{% endif %}
+
+{% if user.is_authenticated and user.role == 'admin' %}
+    <!-- Admin controls -->
+    <div class="sidebar-section">
+        <h4 class="sidebar-section-title">Управление захоронением</h4>
+        <div class="d-flex justify-content-between">
+            <button id="admin-edit-grave" class="btn btn-warning btn-sm">
+                <i class="fas fa-edit"></i> Редактировать
+            </button>
+            <button id="admin-delete-grave" class="btn btn-danger btn-sm">
+                <i class="fas fa-trash"></i> Удалить
+            </button>
+        </div>
+    </div>
+{% endif %}

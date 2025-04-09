@@ -39,29 +39,41 @@ def map_view(request):
     """
     Главная страница с интерактивной картой
     """
-    # Получаем API ключ для Яндекс Карт
     yandex_maps_api_key = settings.YANDEX_MAPS_API_KEY
-    
-    # Центр карты по умолчанию
     cemetery_center = settings.DEFAULT_CEMETERY_CENTER
+    cemeteries = Cemetery.objects.all()  # Получаем список кладбищ
+
+    # Получаем ID кладбища из параметров запроса
+    selected_cemetery_id = request.GET.get('cemetery_id', None)
     
-    # Получаем список всех кладбищ для фильтрации
-    cemeteries = Cemetery.objects.all()
-    
-    # Если пользователь авторизован, получаем его избранные захоронения
+    graves = Grave.objects.all()
+    if selected_cemetery_id:
+        graves = graves.filter(cemetery_id=selected_cemetery_id)  # Фильтруем по кладбищу
+
     favorite_graves_ids = []
     if request.user.is_authenticated:
         favorite_graves_ids = list(FavoriteGrave.objects.filter(
             user=request.user
         ).values_list('grave_id', flat=True))
-    
+
+    # Формируем данные для передачи на фронт
+    graves_data = [{
+        'id': grave.id,
+        'full_name': grave.full_name,
+        'birth_date': grave.birth_date.strftime('%d.%m.%Y') if grave.birth_date else None,
+        'death_date': grave.death_date.strftime('%d.%m.%Y') if grave.death_date else None,
+        'polygon': grave.polygon_coordinates,
+        'cemetery_name': grave.cemetery.name if grave.cemetery else None,
+    } for grave in graves]
+
     context = {
         'yandex_maps_api_key': yandex_maps_api_key,
         'cemetery_center': cemetery_center,
         'favorite_graves_ids': favorite_graves_ids,
         'cemeteries': cemeteries,
+        'graves_data': graves_data,  # Передаем данные о захоронениях
     }
-    
+
     return render(request, 'graves/map.html', context)
 
 
@@ -100,7 +112,7 @@ def search_graves(request):
     query = request.GET.get('query', '')
     birth_date = request.GET.get('birth_date', '')
     death_date = request.GET.get('death_date', '')
-    cemetery_id = request.GET.get('cemetery_id', '')
+    cemetery_id = request.GET.get('cemetery_id', '')  # Новый параметр для фильтрации по кладбищу
     favorites_only = request.GET.get('favorites_only') == 'true'
     
     graves = Grave.objects.all()

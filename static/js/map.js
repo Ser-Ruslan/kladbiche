@@ -257,6 +257,7 @@ function loadAllGraves() {
                         properties: {
                             graveId: grave.id,
                             name: grave.full_name,
+                            cemeteryId: grave.cemetery_id,  // Добавляем cemeteryId для фильтрации
                             isFavorite: mapApp.favoriteGraves.includes(grave.id)
                         },
                         options: {
@@ -267,6 +268,9 @@ function loadAllGraves() {
                         }
                     };
                 });
+
+                // Удаляем старые объекты, прежде чем добавлять новые
+                mapApp.objectManager.objects.removeAll();
 
                 // Добавляем объекты на карту
                 mapApp.objectManager.add({
@@ -290,6 +294,21 @@ function loadAllGraves() {
                         // Попытка центрировать карту на захоронении по ID из URL
                         centerMapOnGrave(graveId);
                     }, 500);
+                }
+
+                // Проверяем состояние фильтра под параметры кладбища
+                const cemeteryId = urlParams.cemetery_id;
+                if (cemeteryId) {
+                    // Фильтруем захоронения по выбранному кладбищу
+                    const filteredGraves = features.filter(grave => grave.properties.cemeteryId == cemeteryId);
+                    
+                    // Удаляем старые объекты и добавляем только отфильтрованные
+                    mapApp.objectManager.objects.removeAll(); // Удаляем старые объекты перед добавлением фильтрованных
+                    mapApp.objectManager.add({
+                        type: 'FeatureCollection',
+                        features: filteredGraves
+                    });
+                    console.log('Фильтруем захоронения по кладбищу:', cemeteryId);
                 }
 
                 resolve(data);
@@ -1171,3 +1190,64 @@ function showNotification(message, type = 'info') {
         }
     }, 5000);
 }
+
+/**
+ * Фильтрация захоронений по кладбищу
+ */
+function filterCemetery(cemeteryId) {
+    // Очищаем результаты поиска
+    document.getElementById('search-results').innerHTML = '';
+    
+    if (!mapApp.objectManager) {
+        console.error('ObjectManager не инициализирован');
+        return;
+    }
+    
+    // Если выбрано "Все кладбища"
+    if (!cemeteryId) {
+        // Загружаем все захоронения
+        loadAllGraves().then(() => {
+            console.log('Отображены все захоронения');
+        });
+        return;
+    }
+    
+    // Преобразуем ID в число для корректного сравнения
+    cemeteryId = parseInt(cemeteryId);
+    
+    // Загружаем все захоронения сначала
+    loadAllGraves().then(() => {
+        // Получаем все объекты
+        const allFeatures = mapApp.objectManager.objects.getAll();
+        
+        // Фильтруем объекты по ID кладбища
+        const filteredFeatures = allFeatures.filter(feature => 
+            feature.properties.cemeteryId === cemeteryId
+        );
+        
+        // Удаляем все объекты с карты
+        mapApp.objectManager.objects.removeAll();
+        
+        // Добавляем только отфильтрованные объекты
+        mapApp.objectManager.add({
+            type: 'FeatureCollection',
+            features: filteredFeatures
+        });
+        
+        console.log(`Отфильтровано захоронений: ${filteredFeatures.length}`);
+        
+        // Если есть результаты, центрируем карту на первом найденном захоронении
+        if (filteredFeatures.length > 0) {
+            const firstGrave = filteredFeatures[0];
+            const center = getCenterOfPolygon(firstGrave.geometry.coordinates);
+            mapApp.map.setCenter(center, 17);
+        }
+    });
+}
+
+mapApp.objectManager.objects.removeAll(); // Удаляем старые объекты
+mapApp.objectManager.add({
+    type: 'FeatureCollection',
+    features: filteredGraves
+});
+

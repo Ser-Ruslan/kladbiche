@@ -30,6 +30,15 @@
             </div>
             
             <button type="submit" class="search-button">Найти</button>
+            <div class="filter-group">
+                <label for="search-cemetery" class="filter-label">Кладбище:</label>
+                <select id="search-cemetery" class="form-control" onchange="filterCemetery(this.value)">
+                    <option value="">Все кладбища</option>
+                    {% for cemetery in cemeteries %}
+                        <option value="{{ cemetery.id }}" {% if cemetery.id == selected_cemetery_id %}selected{% endif %}>{{ cemetery.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </form>
     </div>
     

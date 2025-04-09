@@ -114,7 +114,7 @@ function removeFavorite(graveId) {
         return;
     }
     
-    fetch(`/api/graves/${graveId}/remove/`, {
+    fetch(`/api/favorites/${graveId}/remove/`, {
         method: 'DELETE',
         headers: {
             'X-CSRFToken': getCsrfToken(),

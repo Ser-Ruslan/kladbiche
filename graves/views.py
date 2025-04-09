@@ -10,11 +10,30 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.urls import reverse_lazy
 from django.contrib.auth import get_user_model
 
-from .models import Grave, PersonalNote, FavoriteGrave, EditProposal
+from .models import Grave, PersonalNote, FavoriteGrave, EditProposal, Cemetery
 from .forms import GraveForm, PersonalNoteForm, EditProposalForm
 from notifications.utils import notify_user, notify_user_about_proposal_status
 
 User = get_user_model()
+
+
+def cemetery_list(request):
+    """
+    Список всех кладбищ
+    """
+    cemeteries = Cemetery.objects.all()
+    return render(request, 'graves/cemetery_list.html', {'cemeteries': cemeteries})
+
+def cemetery_detail(request, cemetery_id):
+    """
+    Детальная информация о кладбище
+    """
+    cemetery = get_object_or_404(Cemetery, id=cemetery_id)
+    graves = Grave.objects.filter(cemetery=cemetery)
+    return render(request, 'graves/cemetery_detail.html', {
+        'cemetery': cemetery,
+        'graves': graves
+    })
 
 def map_view(request):
     """
@@ -25,6 +44,9 @@ def map_view(request):
     
     # Центр карты по умолчанию
     cemetery_center = settings.DEFAULT_CEMETERY_CENTER
+    
+    # Получаем список всех кладбищ для фильтрации
+    cemeteries = Cemetery.objects.all()
     
     # Если пользователь авторизован, получаем его избранные захоронения
     favorite_graves_ids = []
@@ -37,6 +59,7 @@ def map_view(request):
         'yandex_maps_api_key': yandex_maps_api_key,
         'cemetery_center': cemetery_center,
         'favorite_graves_ids': favorite_graves_ids,
+        'cemeteries': cemeteries,
     }
     
     return render(request, 'graves/map.html', context)
@@ -77,6 +100,7 @@ def search_graves(request):
     query = request.GET.get('query', '')
     birth_date = request.GET.get('birth_date', '')
     death_date = request.GET.get('death_date', '')
+    cemetery_id = request.GET.get('cemetery_id', '')
     favorites_only = request.GET.get('favorites_only') == 'true'
     
     graves = Grave.objects.all()
@@ -93,6 +117,10 @@ def search_graves(request):
     if death_date:
         graves = graves.filter(death_date=death_date)
     
+    # Фильтрация по кладбищу
+    if cemetery_id:
+        graves = graves.filter(cemetery_id=cemetery_id)
+    
     # Фильтрация по избранному (только для авторизованных пользователей)
     if favorites_only and request.user.is_authenticated:
         favorite_graves_ids = FavoriteGrave.objects.filter(
@@ -103,12 +131,18 @@ def search_graves(request):
     # Преобразуем результаты в формат JSON
     graves_data = []
     for grave in graves:
+        photo_url = grave.photo.url if grave.photo else None
+        cemetery_name = grave.cemetery.name if grave.cemetery else None
+        
         graves_data.append({
             'id': grave.id,
             'full_name': grave.full_name,
             'birth_date': grave.birth_date.strftime('%d.%m.%Y') if grave.birth_date else None,
             'death_date': grave.death_date.strftime('%d.%m.%Y') if grave.death_date else None,
             'polygon': grave.polygon_coordinates,
+            'photo_url': photo_url,
+            'cemetery_name': cemetery_name,
+            'cemetery_id': grave.cemetery_id,
         })
     
     return JsonResponse({'graves': graves_data})

@@ -1,10 +1,18 @@
+
 from django.contrib import admin
-from .models import Grave, PersonalNote, FavoriteGrave, EditProposal
+from .models import Grave, PersonalNote, FavoriteGrave, EditProposal, Cemetery
+
+@admin.register(Cemetery)
+class CemeteryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'address', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('name', 'address')
+    date_hierarchy = 'created_at'
 
 @admin.register(Grave)
 class GraveAdmin(admin.ModelAdmin):
-    list_display = ('full_name', 'birth_date', 'death_date', 'created_at', 'created_by')
-    list_filter = ('created_at',)
+    list_display = ('full_name', 'birth_date', 'death_date', 'cemetery', 'created_at', 'created_by')
+    list_filter = ('created_at', 'cemetery')
     search_fields = ('full_name',)
     date_hierarchy = 'created_at'
 

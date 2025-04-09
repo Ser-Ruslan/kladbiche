@@ -1,6 +1,12 @@
 <div class="grave-details">
     <h3 class="grave-name">{{ grave.full_name }}</h3>
     
+    {% if grave.photo %}
+        <div class="grave-photo mb-3">
+            <img src="{{ grave.photo.url }}" alt="Фото захоронения" class="img-fluid rounded">
+        </div>
+    {% endif %}
+    
     <div class="grave-dates">
         {% if grave.birth_date and grave.death_date %}
             {{ grave.birth_date|date:"d.m.Y" }} - {{ grave.death_date|date:"d.m.Y" }}
@@ -10,6 +16,15 @@
             Умер: {{ grave.death_date|date:"d.m.Y" }}
         {% endif %}
     </div>
+    
+    {% if grave.cemetery %}
+        <div class="grave-cemetery mt-2 mb-2">
+            <strong>Кладбище:</strong> {{ grave.cemetery.name }}
+            {% if grave.cemetery.address %}
+                <div class="cemetery-address text-muted">{{ grave.cemetery.address }}</div>
+            {% endif %}
+        </div>
+    {% endif %}
     
     {% if grave.description %}
         <div class="grave-description">

@@ -27,6 +27,7 @@
                             </td>
                             <td>{{ note.text|linebreaks }}</td>
                             <td>{{ note.updated_at|date:"d.m.Y H:i" }}</td>
+                            
                             <td>
                                 <button class="btn btn-sm btn-primary edit-note" 
                                         data-grave-id="{{ note.grave.id }}" 

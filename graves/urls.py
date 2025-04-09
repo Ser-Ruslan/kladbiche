@@ -13,4 +13,6 @@ urlpatterns = [
     path('my-notes/', views.MyPersonalNotesListView.as_view(), name='my_personal_notes'),
     path('edit-proposal/<int:pk>/', views.EditProposalDetailView.as_view(), name='edit_proposal_detail'),
     path('admin/proposals/', views.AdminEditProposalsListView.as_view(), name='admin_proposals_list'),
+    path('cemeteries/', views.cemetery_list, name='cemetery_list'),
+    path('cemetery/<int:cemetery_id>/', views.cemetery_detail, name='cemetery_detail'),
 ]

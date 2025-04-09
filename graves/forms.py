@@ -1,6 +1,20 @@
 from django import forms
 from django.utils.translation import gettext_lazy as _
-from .models import Grave, PersonalNote, EditProposal
+from .models import Grave, PersonalNote, EditProposal, Cemetery
+
+class CemeteryForm(forms.ModelForm):
+    """
+    Форма для создания и редактирования кладбищ
+    """
+    class Meta:
+        model = Cemetery
+        fields = ['name', 'address', 'description', 'coordinates']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'address': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'coordinates': forms.TextInput(attrs={'class': 'form-control'}),
+        }
 
 class GraveForm(forms.ModelForm):
     """
@@ -8,15 +22,16 @@ class GraveForm(forms.ModelForm):
     """
     class Meta:
         model = Grave
-        fields = ['full_name', 'birth_date', 'death_date', 'description', 'polygon_coordinates']
+        fields = ['full_name', 'birth_date', 'death_date', 'description', 'polygon_coordinates', 'photo', 'cemetery']
         widgets = {
             'full_name': forms.TextInput(attrs={'class': 'form-control'}),
             'birth_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'death_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
             'polygon_coordinates': forms.HiddenInput(),
+            'photo': forms.FileInput(attrs={'class': 'form-control'}),
+            'cemetery': forms.Select(attrs={'class': 'form-control'}),
         }
-
 
 class PersonalNoteForm(forms.ModelForm):
     """

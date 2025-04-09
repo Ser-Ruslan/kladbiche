@@ -128,13 +128,13 @@ SIMPLE_JWT = {
 
 # Email settings (for user registration, password reset, etc.)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
-# For production, use SMTP:
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'your-smtp-server'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your-email'
-# EMAIL_HOST_PASSWORD = 'your-password'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # или другой SMTP сервер
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'figmabros@gmail.com'
+EMAIL_HOST_PASSWORD = 'pyvu gjwt vhuj yadu'
+DEFAULT_FROM_EMAIL = 'figmabros@gmail.com'
 
 # Yandex Maps API Key
 YANDEX_MAPS_API_KEY = os.getenv('YANDEX_MAPS_API_KEY', '69436f8e-f6b6-41bf-9606-13f8a73cc804')

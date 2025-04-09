@@ -9,6 +9,8 @@ from django.utils.decorators import method_decorator
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 
+from api.serializers import User
+
 from .models import Grave, PersonalNote, FavoriteGrave, EditProposal
 from .forms import GraveForm, PersonalNoteForm, EditProposalForm
 from notifications.utils import create_notification

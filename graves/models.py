@@ -2,6 +2,24 @@ from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 
+class Cemetery(models.Model):
+    """
+    Модель кладбища
+    """
+    name = models.CharField(_('название кладбища'), max_length=255)
+    address = models.CharField(_('адрес'), max_length=255, blank=True, null=True)
+    description = models.TextField(_('описание'), blank=True, null=True)
+    coordinates = models.CharField(_('координаты центра'), max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(_('дата добавления'), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('кладбище')
+        verbose_name_plural = _('кладбища')
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
 class Grave(models.Model):
     """
     Модель захоронения
@@ -13,6 +31,15 @@ class Grave(models.Model):
     birth_date = models.DateField(_('дата рождения'), null=True, blank=True)
     death_date = models.DateField(_('дата смерти'), null=True, blank=True)
     description = models.TextField(_('описание'), blank=True)
+    photo = models.ImageField(_('фотография'), upload_to='grave_photos/', null=True, blank=True)
+    cemetery = models.ForeignKey(
+        Cemetery,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='graves',
+        verbose_name=_('кладбище')
+    )
     
     created_at = models.DateTimeField(_('дата добавления'), auto_now_add=True)
     created_by = models.ForeignKey(

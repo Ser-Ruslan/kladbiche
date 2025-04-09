@@ -3,6 +3,23 @@
 </div>
 
 <div class="sidebar-body">
+
+ <!-- Выбор кладбища -->
+    <div class="cemetery-selector mb-3">
+        <label for="cemetery-selector">Выберите кладбище:</label>
+        <select id="cemetery-selector" class="form-control">
+            <option value="central">Центральное кладбище</option>
+            <option value="smolenskoe">Смоленское кладбище</option>
+        </select>
+    </div>
+    <!-- Mode toggle -->
+    <div class="mode-toggle mb-3">
+        <select id="search-mode" class="form-control">
+            <option value="search">Режим поиска</option>
+            <option value="filter">Режим фильтра</option>
+        </select>
+    </div>
+
     <!-- Search form -->
     <div class="search-section">
         <form id="search-form">
@@ -19,6 +36,16 @@
                 <div class="filter-group">
                     <label for="search-death-date" class="filter-label">Дата смерти:</label>
                     <input type="date" id="search-death-date" class="form-control">
+                </div>
+
+                <div class="filter-group">
+                    <label for="search-cemetery" class="filter-label">Кладбище:</label>
+                    <select id="search-cemetery" class="form-control">
+                        <option value="">Все кладбища</option>
+                        {% for cemetery in cemeteries %}
+                            <option value="{{ cemetery.id }}">{{ cemetery.name }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
                 
                 {% if user.is_authenticated %}

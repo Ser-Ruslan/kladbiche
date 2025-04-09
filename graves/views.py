@@ -118,7 +118,12 @@ def search_graves(request):
         graves = graves.filter(death_date=death_date)
     
     # Фильтрация по кладбищу
+    cemetery_id = request.GET.get('cemetery_id')
     if cemetery_id:
+        graves = graves.filter(cemetery_id=cemetery_id)
+    
+    # Фильтрация по кладбищу
+    if cemetery_id and cemetery_id != 'all':
         graves = graves.filter(cemetery_id=cemetery_id)
     
     # Фильтрация по избранному (только для авторизованных пользователей)

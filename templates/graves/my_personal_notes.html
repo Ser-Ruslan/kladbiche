@@ -143,10 +143,10 @@
         // Обработка кнопок редактирования
         document.querySelectorAll('.edit-note').forEach(button => {
             button.addEventListener('click', function() {
-                const graveId = this.dataset.graveId;
+                currentGraveId = this.dataset.graveId;
                 const noteText = this.dataset.noteText;
                 
-                document.getElementById('noteGraveId').value = graveId;
+                document.getElementById('noteGraveId').value = currentGraveId;
                 document.getElementById('noteText').value = noteText;
                 
                 editNoteModal.show();
@@ -160,14 +160,25 @@
                 deleteNoteModal.show();
             });
         });
+
+        // Обработка кнопки "Отмена" в модальном окне редактирования
+        document.querySelector('#editNoteModal .btn-secondary').addEventListener('click', function() {
+            editNoteModal.hide();
+        });
+
+        // Обработка кнопки "Отмена" в модальном окне удаления
+        document.querySelector('#deleteNoteModal .btn-secondary').addEventListener('click', function() {
+            deleteNoteModal.hide();
+        });
         
         // Сохранение заметки
         document.getElementById('saveNoteBtn').addEventListener('click', function() {
-            const graveId = document.getElementById('noteGraveId').value;
+            if (!currentGraveId) return;
+            
             const noteText = document.getElementById('noteText').value;
             
             // Отправка AJAX запроса
-            fetch(`/graves/grave/${graveId}/save-note/`, {
+            fetch(`/graves/grave/${currentGraveId}/save-note/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -176,7 +187,12 @@
                 },
                 body: `note_text=${encodeURIComponent(noteText)}`
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     editNoteModal.hide();
@@ -184,7 +200,10 @@
                     window.location.reload();
                 }
             })
-            .catch(error => console.error('Ошибка при сохранении заметки:', error));
+            .catch(error => {
+                console.error('Ошибка при сохранении заметки:', error);
+                alert('Произошла ошибка при сохранении заметки');
+            });
         });
         
         // Удаление заметки
@@ -201,7 +220,12 @@
                 },
                 body: 'note_text='
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     deleteNoteModal.hide();
@@ -209,12 +233,16 @@
                     window.location.reload();
                 }
             })
-            .catch(error => console.error('Ошибка при удалении заметки:', error));
+            .catch(error => {
+                console.error('Ошибка при удалении заметки:', error);
+                alert('Произошла ошибка при удалении заметки');
+            });
         });
         
         // Функция для получения CSRF токена
         function getCsrfToken() {
-            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const token = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            return token;
         }
     });
 </script>

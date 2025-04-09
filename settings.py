@@ -15,10 +15,17 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-default-key-for-dev
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost', '127.0.0.1', 'ff2f752b-bf64-4b85-8469-0aa7b15336ce-00-3kq88h4p77vq5.worf.replit.dev', '.replit.dev']
+ALLOWED_HOSTS = ['*']
 
 # CSRF settings
-CSRF_TRUSTED_ORIGINS = ['https://ff2f752b-bf64-4b85-8469-0aa7b15336ce-00-3kq88h4p77vq5.worf.replit.dev', 'https://*.replit.dev']
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.replit.dev',
+    'https://*.repl.co',
+    'https://69c107e3-520b-43e5-ac1e-7a76e09d66df-00-iw08baiw3c3z.spock.replit.dev'
+]
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 # Application definition
 INSTALLED_APPS = [
@@ -28,11 +35,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     # Third-party apps
     'rest_framework',
     'rest_framework_simplejwt',
-    
+    'corsheaders', # Add corsheaders app
+
     # Local apps
     'users',
     'graves',
@@ -48,6 +56,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware', # Add CORS middleware
 ]
 
 ROOT_URLCONF = 'cemetery_map.urls'

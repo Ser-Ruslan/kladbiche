@@ -14,6 +14,16 @@ const mapApp = {
     isAdmin: false, // Флаг администратора
     drawingMode: false, // Режим рисования полигона
     drawingPolygon: null, // Объект создаваемого полигона
+    cemeteryCoordinates: {
+        central: {
+            center: [52.059841124947, 113.51869776876853],
+            zoom: 17
+        },
+        smolenskoe: {
+            center: [52.155789125323786, 113.51357141191197],
+            zoom: 17
+        }
+    }
 };
 
 /**
@@ -139,6 +149,45 @@ function getCenterOfPolygon(coordinates) {
 
 // Инициализация карты при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
+
+    // Cemetery selector handling
+    const cemeterySelector = document.getElementById('cemetery-selector');
+    if (cemeterySelector) {
+        cemeterySelector.addEventListener('change', function() {
+            const selectedCemetery = this.value;
+            
+            if (mapApp.map && mapApp.cemeteryCoordinates[selectedCemetery]) {
+                // Устанавливаем новый центр карты и зум
+                mapApp.map.setCenter(
+                    mapApp.cemeteryCoordinates[selectedCemetery].center,
+                    mapApp.cemeteryCoordinates[selectedCemetery].zoom,
+                    { duration: 800 }
+                );
+                
+                console.log(`Карта перемещена на кладбище: ${selectedCemetery}`);
+            } else {
+                console.error(`Координаты для кладбища "${selectedCemetery}" не найдены или карта не инициализирована`);
+            }
+        });
+    }
+
+    // Cemetery filter handling
+    const cemeteryFilter = document.getElementById('cemetery-filter');
+    if (cemeteryFilter) {
+        cemeteryFilter.addEventListener('change', function() {
+            const selectedCemeteryId = this.value;
+            const graves = window.gravesCollection.getGeoObjects();
+
+            graves.forEach(grave => {
+                const graveData = grave.properties.get('graveData');
+                if (selectedCemeteryId === 'all' || graveData.cemetery_id === parseInt(selectedCemeteryId)) {
+                    grave.options.set('visible', true);
+                } else {
+                    grave.options.set('visible', false);
+                }
+            });
+        });
+    }
     // Проверка, авторизован ли пользователь и является ли администратором
     if (document.body.dataset.userAuthenticated === 'true') {
         mapApp.isUserAuthenticated = true;
@@ -257,7 +306,8 @@ function loadAllGraves() {
                         properties: {
                             graveId: grave.id,
                             name: grave.full_name,
-                            isFavorite: mapApp.favoriteGraves.includes(grave.id)
+                            isFavorite: mapApp.favoriteGraves.includes(grave.id),
+                            cemetery_id: grave.cemetery_id // Add cemetery_id to properties
                         },
                         options: {
                             fillColor: fillColor,
@@ -432,41 +482,100 @@ function initSearch() {
  * Поиск захоронений по параметрам
  */
 function searchGraves() {
-    const query = document.getElementById('search-query').value;
-    const birthDate = document.getElementById('search-birth-date').value;
-    const deathDate = document.getElementById('search-death-date').value;
-    const favoritesOnly = document.getElementById('favorites-only') && 
-                          document.getElementById('favorites-only').checked;
+    try {
+        const searchMode = document.getElementById('search-mode')?.value || 'search';
+        const query = document.getElementById('search-query')?.value || '';
+        const birthDate = document.getElementById('search-birth-date')?.value || '';
+        const deathDate = document.getElementById('search-death-date')?.value || '';
+        const cemeteryId = document.getElementById('search-cemetery')?.value || '';
+        const favoritesOnly = document.getElementById('favorites-only')?.checked || false;
 
-    // Формируем URL с параметрами поиска
-    let url = '/graves/search/?';
-    if (query) url += `query=${encodeURIComponent(query)}&`;
-    if (birthDate) url += `birth_date=${encodeURIComponent(birthDate)}&`;
-    if (deathDate) url += `death_date=${encodeURIComponent(deathDate)}&`;
-    if (favoritesOnly) url += 'favorites_only=true&';
+        if (searchMode === 'filter') {
+            // Режим фильтра - делаем запрос на сервер
+            const params = new URLSearchParams();
+            if (cemeteryId && cemeteryId !== 'all') {
+                params.append('cemetery_id', cemeteryId);
+            }
+            if (favoritesOnly) {
+                params.append('favorites_only', 'true');
+            }
 
-    // Показываем индикатор загрузки
-    document.getElementById('search-results').innerHTML = `
-        <div class="loading">
-            <div class="loading-spinner"></div>
-        </div>
-    `;
+            fetch(`/graves/search/?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Получаем ID найденных захоронений
+                    const foundGraveIds = new Set(data.graves.map(grave => grave.id));
 
-    // Запрашиваем результаты поиска
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            mapApp.searchResults = data.graves;
-            displaySearchResults(data.graves);
-        })
-        .catch(error => {
-            console.error('Ошибка при поиске захоронений:', error);
-            document.getElementById('search-results').innerHTML = `
-                <div class="alert alert-danger">
-                    Ошибка при поиске. Пожалуйста, попробуйте еще раз.
-                </div>
-            `;
-        });
+                    // Обновляем видимость полигонов
+                    mapApp.objectManager.objects.each((object) => {
+                        const isVisible = foundGraveIds.has(object.id);
+                        mapApp.objectManager.objects.setObjectOptions(object.id, {
+                            fillColor: '#b3b3b3',
+                            strokeColor: '#999999',
+                            strokeWidth: 1,
+                            opacity: isVisible ? 0.6 : 0,
+                            visible: isVisible
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('Ошибка при фильтрации захоронений:', error);
+                    showNotification('Ошибка при фильтрации захоронений', 'error');
+                });
+
+            // Очищаем результаты поиска
+            document.getElementById('search-results').innerHTML = '';
+            return;
+        }
+
+        // Режим поиска - отправляем запрос на сервер
+        const params = new URLSearchParams();
+        if (query) params.append('query', query);
+        if (birthDate) params.append('birth_date', birthDate);
+        if (deathDate) params.append('death_date', deathDate);
+        if (cemeteryId && cemeteryId !== 'all') params.append('cemetery_id', cemeteryId);
+        if (favoritesOnly) params.append('favorites_only', 'true');
+
+        const url = `/graves/search/?${params.toString()}`;
+
+        // Показываем индикатор загрузки
+        document.getElementById('search-results').innerHTML = `
+            <div class="loading">
+                <div class="loading-spinner"></div>
+            </div>
+        `;
+
+        // Запрашиваем результаты поиска
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                mapApp.searchResults = data.graves;
+
+                // Получаем ID найденных захоронений
+                const foundGraveIds = new Set(data.graves.map(grave => grave.id));
+
+                // Скрываем/показываем полигоны на карте
+                mapApp.objectManager.objects.each(object => {
+                    const isVisible = foundGraveIds.has(object.id);
+                    mapApp.objectManager.objects.setObjectOptions(object.id, {
+                        visible: isVisible
+                    });
+                });
+
+                displaySearchResults(data.graves);
+            })
+            .catch(error => {
+                console.error('Ошибка при поиске захоронений:', error);
+                document.getElementById('search-results').innerHTML = `
+                    <div class="alert alert-danger">
+                        Ошибка при поиске. Пожалуйста, попробуйте еще раз.
+                    </div>
+                `;
+            });
+    } catch (error) {
+        console.error('Ошибка в функции searchGraves:', error);
+        showNotification('Ошибка при поиске захоронений', 'error');
+    }
 }
 
 /**
@@ -1171,3 +1280,28 @@ function showNotification(message, type = 'info') {
         }
     }, 5000);
 }
+
+// Обработчики в модальном окне редактирования
+    const editGraveModal = document.getElementById('editGraveModal');
+    if (editGraveModal) {
+        editGraveModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const grave = getCurrentGrave();
+
+            // Заполняем поля формы текущими данными
+            const form = editGraveModal.querySelector('form');
+            form.querySelector('#graveName').value = grave.name;
+            form.querySelector('#graveDescription').value = grave.description || '';
+            form.querySelector('#graveCemetery').value = grave.cemetery_id || '';
+            form.querySelector('#polygon-coordinates').value = JSON.stringify(grave.polygon);
+
+            // Отображаем текущее фото, если оно есть
+            const currentPhotoContainer = form.querySelector('.current-photo');
+            if (currentPhotoContainer && grave.photo_url) {
+                const img = currentPhotoContainer.querySelector('img');
+                if (img) {
+                    img.src = grave.photo_url;
+                }
+            }
+        });
+    }

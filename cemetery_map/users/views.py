@@ -41,7 +41,19 @@ class CustomLogoutView(LogoutView):
     """
     Представление для выхода пользователей
     """
+    template_name = 'users/logout.html'
     next_page = reverse_lazy('login')
+    
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Обработка как GET, так и POST запросов
+        """
+        # Если запрос GET, показываем страницу подтверждения
+        if request.method == 'GET':
+            return render(request, self.template_name)
+        
+        # Если запрос POST, выходим из системы
+        return super().dispatch(request, *args, **kwargs)
 
 
 class UserRegistrationView(CreateView):
@@ -74,13 +86,20 @@ class UserRegistrationView(CreateView):
         activation_url = self.request.build_absolute_uri(
             reverse_lazy('activate', kwargs={'token': token})
         )
-        send_mail(
-            'Активация аккаунта на сервисе "Интерактивная карта кладбища"',
-            f'Для активации аккаунта перейдите по ссылке: {activation_url}',
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email],
-            fail_silently=False,
-        )
+        try:
+            send_mail(
+                'Активация аккаунта на сервисе "Интерактивная карта кладбища"',
+                f'Для активации аккаунта перейдите по ссылке: {activation_url}',
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+            messages.success(self.request, 'На вашу почту отправлено письмо с инструкциями по активации аккаунта.')
+        except Exception as e:
+            print(f"Ошибка отправки письма: {e}")
+            user.is_active = True  # Активируем пользователя автоматически в случае ошибки
+            user.save()
+            messages.warning(self.request, 'Возникла проблема с отправкой письма. Ваш аккаунт активирован автоматически.')
 
         messages.success(self.request, 'Регистрация успешна! Проверьте email для активации аккаунта.')
         return redirect('login')

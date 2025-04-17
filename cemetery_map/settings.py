@@ -132,9 +132,9 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'  # или другой SMTP сервер
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'figmabros@gmail.com'
-EMAIL_HOST_PASSWORD = 'pyvu gjwt vhuj yadu'
-DEFAULT_FROM_EMAIL = 'figmabros@gmail.com'
+EMAIL_HOST_USER = ''
+EMAIL_HOST_PASSWORD = ''
+DEFAULT_FROM_EMAIL = ''
 
 # Yandex Maps API Key
 YANDEX_MAPS_API_KEY = os.getenv('YANDEX_MAPS_API_KEY', '69436f8e-f6b6-41bf-9606-13f8a73cc804')
